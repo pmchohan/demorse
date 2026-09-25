@@ -1,0 +1,107 @@
+/* Column width is paired with the chart's own cap (62rem) plus the paddings between
+   them, so the chart fills its card edge to edge and every section aligns. */
+.page {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: var(--space-6);
+  width: min(100%, 69rem);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-8);
+}
+
+/* Fixed decorative layer: never attached to scrolling content. */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42rem 32rem at 12% -6%, hsl(var(--color-brand-glow) / 0.16), transparent 68%),
+    radial-gradient(36rem 30rem at 92% 8%, hsl(var(--color-dash-500) / 0.12), transparent 70%),
+    radial-gradient(48rem 36rem at 50% 118%, hsl(var(--color-brand-glow) / 0.1), transparent 72%);
+}
+
+.main {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.hero {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-7) 0 var(--space-2);
+  animation: rise var(--duration-slow) var(--ease-out-quint) both;
+}
+
+.headline {
+  max-width: 54rem;
+  font-family: var(--font-display);
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  color: hsl(var(--color-fg-default));
+}
+
+.lead {
+  max-width: 46rem;
+  font-size: var(--font-size-lg);
+  font-weight: 300;
+  color: hsl(var(--color-fg-muted));
+}
+
+.chartPanel {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  background: hsl(var(--color-bg-surface));
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--color-line) / 0.1),
+    var(--shadow-lifted);
+  animation: rise var(--duration-slow) var(--ease-out-quint) 90ms both;
+}
+
+.panelTitle {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: hsl(var(--color-fg-muted));
+}
+
+.footer {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 62rem;
+  padding-top: var(--space-5);
+  border-top: 1px solid hsl(var(--color-line) / 0.12);
+  font-size: var(--font-size-xs);
+  line-height: 1.7;
+  color: hsl(var(--color-fg-subtle));
+}
+
+.warnings {
+  margin: 0;
+  padding-left: var(--space-4);
+  color: hsl(var(--color-warning-500));
+}
+
+@media (min-width: 48rem) {
+  .page {
+    padding-inline: var(--space-6);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(1.25rem);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

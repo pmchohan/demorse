@@ -1,0 +1,339 @@
+.root {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: var(--space-2);
+}
+
+/* The drawing scales with its rendered width, so this cap sets its scale: the whole
+   chart (marks, labels, strokes) reads at ~0.65 of the reference canvas size. It is
+   matched by the page column width so the figure's caption aligns with the drawing. */
+.chart {
+  display: block;
+  width: 100%;
+  min-width: 40rem;
+  max-width: 62rem;
+  margin-inline: auto;
+  height: auto;
+}
+
+/* ---------- Edges: the line, plus the pill that marks a dash ---------- */
+
+.edgeLine {
+  fill: none;
+  stroke: hsl(var(--color-line) / 0.18);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke var(--duration-base) var(--ease-out-expo);
+}
+
+.edgePill {
+  fill: hsl(var(--color-line) / 0.3);
+  transition: fill var(--duration-base) var(--ease-out-expo);
+}
+
+.edge[data-state="active"] .edgeLine {
+  stroke: hsl(var(--color-dot-500) / 0.9);
+}
+
+.edge[data-state="active"][data-symbol="-"] .edgeLine {
+  stroke: hsl(var(--color-dash-500) / 0.9);
+}
+
+.edge[data-state="active"][data-symbol="-"] .edgePill {
+  fill: hsl(var(--color-dash-500));
+}
+
+.edge[data-state="committed"] .edgeLine {
+  stroke: hsl(var(--color-success-500) / 0.42);
+}
+
+.edge[data-state="committed"][data-symbol="-"] .edgePill {
+  fill: hsl(var(--color-success-500) / 0.55);
+}
+
+/* ---------- Letter nodes ---------- */
+
+.nodeDisc {
+  fill: hsl(var(--color-line) / 0.3);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: fill var(--duration-base) var(--ease-out-expo);
+}
+
+/* Dash children are marked by their pill, so their node only shows up when walked. */
+.node[data-ringed="false"] .nodeDisc {
+  fill: transparent;
+}
+
+.nodeHalo {
+  fill: transparent;
+  transition: fill var(--duration-base) var(--ease-out-expo);
+}
+
+.node[data-state="active"] .nodeDisc {
+  fill: hsl(var(--color-dot-500) / 0.85);
+}
+
+.node[data-state="active"][data-symbol="-"] .nodeDisc {
+  fill: hsl(var(--color-dash-500) / 0.85);
+}
+
+.node[data-state="current"] .nodeDisc {
+  fill: hsl(var(--color-brand-400));
+  animation: node-arrive var(--duration-base) var(--ease-out-quint);
+}
+
+.node[data-state="current"] .nodeHalo {
+  fill: hsl(var(--color-brand-glow) / 0.2);
+}
+
+.node[data-state="committed"] .nodeDisc {
+  fill: hsl(var(--color-success-500));
+  animation: node-pulse var(--duration-slow) var(--ease-out-quint);
+}
+
+.node[data-state="committed"] .nodeHalo {
+  fill: hsl(var(--color-success-500) / 0.18);
+}
+
+/* ---------- Letter labels ---------- */
+
+.label {
+  fill: hsl(var(--color-fg-muted));
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-tight);
+  transition: fill var(--duration-base) var(--ease-out-expo);
+}
+
+.label[data-state="active"] {
+  fill: hsl(var(--color-fg-default));
+}
+
+.label[data-state="current"] {
+  fill: hsl(var(--color-brand-400));
+  font-weight: 700;
+}
+
+.label[data-state="committed"] {
+  fill: hsl(var(--color-success-500));
+  font-weight: 700;
+}
+
+/* ---------- Start hub ---------- */
+
+.hubGlow {
+  fill: hsl(var(--color-brand-glow) / 0.05);
+  transition: fill var(--duration-slow) var(--ease-out-expo);
+}
+
+.hub[data-transmitting="true"] .hubGlow {
+  fill: hsl(var(--color-brand-glow) / 0.16);
+}
+
+/* Continuous rotation only reads as a mechanism with constant angular speed. */
+.hubSpin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hub-spin 140s linear infinite;
+}
+
+.hub[data-transmitting="true"] .hubSpin {
+  animation-duration: 24s;
+}
+
+.hubDashedRing {
+  fill: none;
+  stroke: hsl(var(--color-brand-500) / 0.5);
+  stroke-width: 3;
+  stroke-dasharray: 18 13;
+  transition: stroke var(--duration-base) var(--ease-out-expo);
+}
+
+.hub[data-transmitting="true"] .hubDashedRing {
+  stroke: hsl(var(--color-brand-400) / 0.85);
+}
+
+.hubRing {
+  fill: none;
+  stroke: hsl(var(--color-line) / 0.28);
+  stroke-width: 2;
+}
+
+.hubTick {
+  stroke: hsl(var(--color-line) / 0.3);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke var(--duration-base) var(--ease-out-expo);
+}
+
+.hubTickCardinal {
+  stroke: hsl(var(--color-line) / 0.45);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke var(--duration-base) var(--ease-out-expo);
+}
+
+.hub[data-transmitting="true"] .hubTick,
+.hub[data-transmitting="true"] .hubTickCardinal {
+  stroke: hsl(var(--color-brand-400) / 0.7);
+}
+
+.hubCoreRing {
+  fill: none;
+  stroke: hsl(var(--color-brand-500) / 0.55);
+  stroke-width: 2.5;
+  transition: stroke var(--duration-base) var(--ease-out-expo);
+}
+
+.hub[data-transmitting="true"] .hubCoreRing {
+  stroke: hsl(var(--color-brand-400) / 0.9);
+}
+
+.hubCore {
+  fill: hsl(var(--color-brand-500));
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: fill var(--duration-base) var(--ease-out-expo);
+}
+
+.hub[data-transmitting="true"] .hubCore {
+  fill: hsl(var(--color-brand-400));
+  animation: hub-pulse var(--duration-slow) var(--ease-out-quint) infinite;
+}
+
+.hubLabel {
+  fill: hsl(var(--color-fg-subtle));
+  font-family: var(--font-mono);
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+/* ---------- Caption ---------- */
+
+.caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid hsl(var(--color-line) / 0.12);
+}
+
+.readout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.readoutLabel {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: hsl(var(--color-fg-subtle));
+}
+
+.marks {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 1.5rem;
+}
+
+.emptyPath {
+  color: hsl(var(--color-fg-subtle));
+}
+
+.arrow {
+  color: hsl(var(--color-fg-subtle));
+}
+
+.pending {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: hsl(var(--color-brand-400));
+  transition: color var(--duration-base) var(--ease-out-expo);
+}
+
+.pending[data-unresolved="true"] {
+  color: hsl(var(--color-warning-500));
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-xs);
+  color: hsl(var(--color-fg-subtle));
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@keyframes node-arrive {
+  from {
+    transform: scale(0.78);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes node-pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  22% {
+    transform: scale(1.45);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes hub-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hub-pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  18% {
+    transform: scale(1.6);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

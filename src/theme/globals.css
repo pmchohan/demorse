@@ -1,0 +1,164 @@
+/*
+ * Single global stylesheet: design tokens + reset only.
+ * All component styling lives in co-located CSS modules and consumes these tokens.
+ */
+
+:root {
+  /* Surfaces and text */
+  --color-bg-app: 196 55% 3%;
+  --color-bg-surface: 196 38% 7%;
+  --color-bg-raised: 196 30% 11%;
+  --color-fg-default: 190 22% 96%;
+  --color-fg-muted: 192 14% 68%;
+  --color-fg-subtle: 194 12% 53%;
+  --color-fg-on-brand: 196 60% 5%;
+  --color-line: 190 42% 72%;
+
+  /* Brand + signal accents */
+  --color-brand-500: 178 82% 42%;
+  --color-brand-400: 176 90% 58%;
+  --color-brand-glow: 176 92% 52%;
+  --color-dot-500: 170 88% 54%;
+  --color-dash-500: 198 96% 64%;
+  --color-success-500: 158 76% 48%;
+  --color-warning-500: 38 96% 62%;
+  --color-danger-500: 4 84% 64%;
+
+  /* Radii */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-pill: 999px;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  /* Typography */
+  --font-display: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: clamp(1.75rem, 3.4vw, 2.5rem);
+  --font-size-3xl: clamp(2.5rem, 5.4vw, 4.25rem);
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-wide: 0.16em;
+
+  /* Motion — exponential deceleration only; bouncy/elastic curves are banned (impeccable detector). */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 160ms;
+  --duration-instant: 90ms;
+  --duration-base: 320ms;
+  --duration-slow: 780ms;
+
+  /* Depth — diffused ambient light, never harsh drop shadows */
+  --shadow-ambient: 0 2rem 4rem -2.5rem hsl(196 60% 1% / 0.9);
+  --shadow-lifted: 0 3rem 6rem -3rem hsl(196 60% 1% / 0.95);
+  --shadow-glow: 0 0 2.5rem hsl(var(--color-brand-glow) / 0.35);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --color-bg-app: 40 34% 97%;
+  --color-bg-surface: 40 40% 99%;
+  --color-bg-raised: 40 28% 94%;
+  --color-fg-default: 197 52% 11%;
+  --color-fg-muted: 197 22% 32%;
+  --color-fg-subtle: 197 18% 38%;
+  /* Dark-only var, but light surfaces also carry brand fills (status dot, theme orb). */
+  --color-fg-on-brand: 0 0% 100%;
+  --color-line: 197 30% 24%;
+
+  /* Light-theme accents are darkened so text on surfaces keeps ≥4.5:1 contrast. */
+  --color-brand-500: 189 74% 26%;
+  --color-brand-400: 188 76% 28%;
+  --color-brand-glow: 188 84% 34%;
+  --color-dot-500: 186 86% 27%;
+  --color-dash-500: 201 90% 32%;
+  --color-success-500: 158 72% 28%;
+  --color-warning-500: 32 92% 36%;
+  --color-danger-500: 2 74% 44%;
+
+  --shadow-ambient: 0 2rem 4rem -2.5rem hsl(197 30% 40% / 0.35);
+  --shadow-lifted: 0 3rem 6rem -3rem hsl(197 30% 30% / 0.4);
+  --shadow-glow: 0 0 2.5rem hsl(var(--color-brand-glow) / 0.22);
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: hsl(var(--color-bg-app));
+  color: hsl(var(--color-fg-default));
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p,
+figure {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid hsl(var(--color-brand-400));
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Fixed, non-scrolling decorative layer only — never blur scrolling content. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

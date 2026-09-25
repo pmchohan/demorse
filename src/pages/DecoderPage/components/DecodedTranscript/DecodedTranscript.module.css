@@ -1,0 +1,133 @@
+.root {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  background: hsl(var(--color-bg-surface));
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--color-line) / 0.1),
+    var(--shadow-lifted);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.title {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: hsl(var(--color-fg-muted));
+}
+
+.meta {
+  font-size: var(--font-size-xs);
+  color: hsl(var(--color-fg-subtle));
+}
+
+.clear {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: hsl(var(--color-bg-raised));
+  color: hsl(var(--color-fg-default));
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px hsl(var(--color-line) / 0.18);
+  transition:
+    transform var(--duration-fast) var(--ease-out-quint),
+    box-shadow var(--duration-base) var(--ease-out-expo),
+    color var(--duration-base) var(--ease-out-expo);
+}
+
+.clear:hover:not(:disabled) {
+  color: hsl(var(--color-brand-400));
+  box-shadow: inset 0 0 0 1px hsl(var(--color-brand-500) / 0.45);
+}
+
+.clear:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.clear:disabled {
+  cursor: not-allowed;
+  color: hsl(var(--color-fg-subtle));
+  opacity: 0.6;
+}
+
+.text {
+  min-height: 3.25rem;
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: var(--letter-spacing-tight);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: hsl(var(--color-fg-default));
+}
+
+.text[data-empty="true"] {
+  font-size: var(--font-size-md);
+  font-weight: 400;
+  color: hsl(var(--color-fg-subtle));
+}
+
+.notice {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: hsl(var(--color-warning-500));
+  background: hsl(var(--color-warning-500) / 0.08);
+  box-shadow: inset 0 0 0 1px hsl(var(--color-warning-500) / 0.3);
+}
+
+.letters {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-1) 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.letter {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: center;
+  min-width: 2.75rem;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: hsl(var(--color-bg-raised));
+  box-shadow: inset 0 0 0 1px hsl(var(--color-line) / 0.12);
+  transition: box-shadow var(--duration-base) var(--ease-out-expo);
+}
+
+.letter[data-latest="true"] {
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--color-brand-500) / 0.45),
+    var(--shadow-glow);
+}
+
+.letterCharacter {
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: hsl(var(--color-fg-default));
+}
+
+.letterMorse {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 0.75rem;
+}

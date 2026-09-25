@@ -1,0 +1,44 @@
+.mark {
+  display: inline-block;
+  flex: none;
+  background: hsl(var(--color-dot-500));
+  border-radius: var(--radius-pill);
+  transition:
+    background var(--duration-fast) var(--ease-out-expo),
+    opacity var(--duration-fast) var(--ease-out-expo);
+}
+
+.mark[data-symbol="-"] {
+  background: hsl(var(--color-dash-500));
+}
+
+.muted {
+  opacity: 0.45;
+}
+
+.sm {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.sm[data-symbol="-"] {
+  width: 1.25rem;
+}
+
+.md {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+.md[data-symbol="-"] {
+  width: 1.625rem;
+}
+
+.lg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.lg[data-symbol="-"] {
+  width: 2.25rem;
+}
