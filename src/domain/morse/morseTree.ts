@@ -8,6 +8,28 @@ export interface ChartPoint {
 /** Where the chart's start hub sits — the spine passes through it. */
 export const CHART_START: ChartPoint = { x: 760, y: 216 }
 
+/**
+ * Radius of the hub standing at the start of the spine.
+ *
+ * The SVG clips anything drawn outside the view box, so the hub has to fit inside it:
+ * its glow reaches `HUB_SHAPE.glow × HUB_RADIUS` from `CHART_START`, and at 112 the top
+ * of that circle fell above the window and got sliced into a flat edge. 76 keeps it
+ * clear with room to spare, and sits lighter against the spine.
+ */
+export const HUB_RADIUS = 76
+
+/** Hub proportions, relative to `HUB_RADIUS`, shared by the drawing and the fit check. */
+export const HUB_SHAPE = {
+  glow: 1.45,
+  dashedRing: 0.95,
+  ring: 0.72,
+  tickCardinal: { from: 1.02, to: 1.34 },
+  tickMinor: { from: 1.06, to: 1.22 },
+  coreRing: 0.34,
+  core: 0.13,
+  label: 1.62,
+} as const
+
 /** Canvas of the reference chart, in its own pixel space. */
 export const CHART_WIDTH = 1520
 export const CHART_HEIGHT = 860

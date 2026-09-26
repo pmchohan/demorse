@@ -3,6 +3,8 @@ import { MORSE_BY_CHARACTER } from './morseAlphabet'
 import {
   CHART_START,
   CHART_VIEW_BOX,
+  HUB_RADIUS,
+  HUB_SHAPE,
   PILL_LENGTH,
   buildMorseTree,
   findMorseNode,
@@ -75,6 +77,17 @@ describe('morseTree', () => {
       expect(insideViewBox(node.point), node.path).toBe(true)
       expect(insideViewBox(node.labelPoint), node.path).toBe(true)
     }
+  })
+
+  it('keeps the start hub inside the chart view box', () => {
+    // The SVG clips anything drawn outside the window. The glow is the hub's widest part,
+    // and nothing masks it, so if it reaches past an edge it is sliced into a flat chord.
+    const reach = HUB_RADIUS * Math.max(HUB_SHAPE.glow, HUB_SHAPE.tickCardinal.to)
+
+    expect(CHART_START.x - reach, 'left').toBeGreaterThan(CHART_VIEW_BOX.x)
+    expect(CHART_START.y - reach, 'top').toBeGreaterThan(CHART_VIEW_BOX.y)
+    expect(CHART_START.x + reach, 'right').toBeLessThan(CHART_VIEW_BOX.x + CHART_VIEW_BOX.width)
+    expect(CHART_START.y + reach, 'bottom').toBeLessThan(CHART_VIEW_BOX.y + CHART_VIEW_BOX.height)
   })
 
   it('marks dot children with a circle and dash children with a pill', () => {

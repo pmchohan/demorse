@@ -14,15 +14,17 @@ describe('MorseMark', () => {
   it('renders a different shape for dot, dash and each size', () => {
     const { container } = render(
       <>
+        <MorseMark symbol="." size="xs" />
         <MorseMark symbol="." size="sm" />
         <MorseMark symbol="-" size="lg" />
       </>,
     )
 
-    const dot = container.querySelector('[data-symbol="."]')
-    const dash = container.querySelector('[data-symbol="-"]')
+    const [extraSmall, small, dash] = [...container.querySelectorAll('span[data-symbol]')]
 
-    expect(dot?.className).not.toBe(dash?.className)
+    expect(extraSmall.className).not.toBe(small.className)
+    expect(extraSmall.className).not.toBe(dash.className)
+    expect(small.className).not.toBe(dash.className)
   })
 
   it('mutes the mark on request', () => {

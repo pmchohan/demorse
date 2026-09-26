@@ -70,6 +70,45 @@ describe('DecoderPage', () => {
     ).toBe('-')
   })
 
+  it('puts the chart and the decoded text on one row', () => {
+    const { container } = render(<DecoderPage />)
+
+    const chart = container.querySelector('section[aria-labelledby="chart-title"]')
+    const transcript = container.querySelector('section[aria-labelledby="transcript-title"]')
+
+    // Same column wrapper: the pair is laid out as a two-column workbench.
+    expect(chart?.parentElement).toBe(transcript?.parentElement)
+    expect(chart?.parentElement?.tagName).toBe('DIV')
+    expect(transcript?.parentElement).not.toBe(chart)
+  })
+
+  it('hands the chart highlight over when the next letter starts', () => {
+    const clock = startClock(50_000)
+    const { container } = render(<DecoderPage />)
+
+    fireEvent.keyDown(window, { code: 'Space', key: ' ' })
+    clock.advance(96)
+    fireEvent.keyUp(window, { code: 'Space', key: ' ' })
+    clock.advance(320)
+
+    // E is committed and its chain is the lit one.
+    expect(container.querySelector('[data-part="edge"][data-state="committed"]')).not.toBeNull()
+
+    // The next press starts new input: E's chain finishes there and then.
+    fireEvent.keyDown(window, { code: 'Space', key: ' ' })
+    clock.advance(96)
+
+    expect(container.querySelector('[data-part="edge"][data-state="committed"]')).toBeNull()
+
+    // Releasing classifies the new symbol, which lights the path being typed.
+    fireEvent.keyUp(window, { code: 'Space', key: ' ' })
+    clock.advance(96)
+
+    const active = container.querySelector('[data-part="edge"][data-state="active"]')
+    expect(active?.getAttribute('data-path')).toBe('.')
+    expect(container.querySelector('[data-part="edge"][data-state="committed"]')).toBeNull()
+  })
+
   it('switches the colour theme from the header', () => {
     render(<DecoderPage />)
 

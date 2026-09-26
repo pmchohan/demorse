@@ -1,3 +1,4 @@
+import { HUB_SHAPE } from '@/domain/morse/morseTree'
 import styles from './MorseChart.module.css'
 
 export interface SignalHubProps {
@@ -23,19 +24,19 @@ export function SignalHub({ cx, cy, radius, isTransmitting }: SignalHubProps) {
       data-transmitting={isTransmitting}
       transform={`translate(${cx} ${cy})`}
     >
-      <circle className={styles.hubGlow} r={radius * 1.45} />
+      <circle className={styles.hubGlow} r={radius * HUB_SHAPE.glow} />
       <g className={styles.hubSpin}>
-        <circle className={styles.hubDashedRing} r={radius * 0.95} />
+        <circle className={styles.hubDashedRing} r={radius * HUB_SHAPE.dashedRing} />
       </g>
-      <circle className={styles.hubRing} r={radius * 0.72} />
+      <circle className={styles.hubRing} r={radius * HUB_SHAPE.ring} />
       {CARDINAL_TICKS.map((angle) => (
         <line
           key={`cardinal-${angle}`}
           className={styles.hubTickCardinal}
           x1={0}
-          y1={-radius * 1.02}
+          y1={-radius * HUB_SHAPE.tickCardinal.from}
           x2={0}
-          y2={-radius * 1.34}
+          y2={-radius * HUB_SHAPE.tickCardinal.to}
           transform={`rotate(${angle})`}
         />
       ))}
@@ -44,15 +45,20 @@ export function SignalHub({ cx, cy, radius, isTransmitting }: SignalHubProps) {
           key={`minor-${angle}`}
           className={styles.hubTick}
           x1={0}
-          y1={-radius * 1.06}
+          y1={-radius * HUB_SHAPE.tickMinor.from}
           x2={0}
-          y2={-radius * 1.22}
+          y2={-radius * HUB_SHAPE.tickMinor.to}
           transform={`rotate(${angle})`}
         />
       ))}
-      <circle className={styles.hubCoreRing} r={radius * 0.34} />
-      <circle className={styles.hubCore} r={radius * 0.13} />
-      <text className={styles.hubLabel} y={radius * 1.62} textAnchor="middle" dominantBaseline="middle">
+      <circle className={styles.hubCoreRing} r={radius * HUB_SHAPE.coreRing} />
+      <circle className={styles.hubCore} r={radius * HUB_SHAPE.core} />
+      <text
+        className={styles.hubLabel}
+        y={radius * HUB_SHAPE.label}
+        textAnchor="middle"
+        dominantBaseline="middle"
+      >
         Start
       </text>
     </g>

@@ -7,6 +7,7 @@ const idleProps = {
   pendingCharacter: null,
   lastLetter: null,
   commitCount: 0,
+  isPressing: false,
   isTransmitting: false,
 }
 
@@ -71,7 +72,7 @@ describe('MorseChart', () => {
     )
   })
 
-  it('shows the committed chain and the new one side by side', () => {
+  it('hands the highlight over when a new letter starts', () => {
     const { container } = render(
       <MorseChart
         {...idleProps}
@@ -83,8 +84,22 @@ describe('MorseChart', () => {
       />,
     )
 
+    // The letter behind you goes out: only the path being typed stays lit.
     expect(pathsOf(container, 'edge', 'active')).toEqual(['-'])
-    expect(pathsOf(container, 'edge', 'committed')).toEqual(['.', '..', '...'])
+    expect(pathsOf(container, 'edge', 'committed')).toEqual([])
+    expect(pathsOf(container, 'node', 'committed')).toEqual([])
+    expect(pathsOf(container, 'edge', 'idle')).toHaveLength(25)
+  })
+
+  it('clears the previous chain the moment a new press starts', () => {
+    const { container } = render(
+      <MorseChart {...idleProps} lastLetter={committedS} commitCount={3} isPressing isTransmitting />,
+    )
+
+    // A symbol is only classified on release, so the press alone ends the highlight.
+    expect(pathsOf(container, 'edge', 'committed')).toEqual([])
+    expect(pathsOf(container, 'node', 'committed')).toEqual([])
+    expect(container.querySelector('[data-part="edge"][data-state="active"]')).toBeNull()
   })
 
   it('reports paths that walk off the chart', () => {
@@ -95,6 +110,13 @@ describe('MorseChart', () => {
     // The chart stops at U: there is no ..-- branch to light up.
     expect(pathsOf(container, 'node', 'active')).toEqual(['.', '..', '..-'])
     expect(pathsOf(container, 'edge', 'active')).toEqual(['.', '..', '..-'])
+  })
+
+  it('anchors the hub where the spine starts', () => {
+    const { container } = render(<MorseChart {...idleProps} />)
+    const hub = container.querySelector('[data-part="signal-hub"]')
+
+    expect(hub?.getAttribute('transform')).toBe('translate(760 216)')
   })
 
   it('marks dash children with a pill and dot children with a ring', () => {

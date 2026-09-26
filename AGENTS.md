@@ -1,4 +1,4 @@
-# Agent Notes — Morse Code Decoder
+# Agent Notes — demorse
 
 Single-page React app that decodes live Morse input (space bar only), walks a decoding chart shaped like the reference illustration, and reads timing thresholds from `VITE_MORSE_*` env variables. No backend, no router, no global state library.
 
@@ -21,7 +21,7 @@ Validation bar before finishing any task: `npx tsc -b`, `npx oxlint src vite.con
 - `src/domain/morse/` — pure decoding logic: `decoderReducer.ts` (clock-injected reducer), `timingClassifier.ts` (press/gap classification), `morseTree.ts` (hand-authored chart geometry: node points, label points, edge routes, dash pills), `morseAlphabet.ts` (letters A–Z).
 - `src/hooks/` — `usePressInput` (global space-bar handling), `useAnimationClock` (requestAnimationFrame), `useMorseSession` (composition), `useColorTheme`.
 - `src/components/atoms/` — shared presentational pieces; `MorseMark` draws the dot/pill mark used by the chart and the transcript.
-- `src/pages/DecoderPage/` — the page plus four components: `MorseChart` (chart, caption, chain lighting), `MorseChart/SignalHub` (abstract start hub), `DecodedTranscript`, `PageHeader`.
+- `src/pages/DecoderPage/` — the page plus four components: `MorseChart` (chart, caption, chain lighting), `MorseChart/SignalHub` (abstract start hub), `DecodedTranscript`, `PageHeader`. `DecoderPage.module.css` holds the `.workbench` row that puts `MorseChart` on the left and `DecodedTranscript` on the right.
 - `src/theme/globals.css` — the only global stylesheet: design tokens, reset, light and dark palettes.
 - `src/test/` — Vitest setup and the deterministic `fakeAnimationClock` used by timing tests.
 - `.env` and `.env.example` — `VITE_MORSE_TAP_MIN_MS`, `TAP_MAX_MS`, `HOLD_MIN_MS`, `HOLD_MAX_MS`, `GAP_MIN_MS`, `GAP_MAX_MS` in milliseconds; keep the two files in sync.
@@ -32,6 +32,8 @@ Validation bar before finishing any task: `npx tsc -b`, `npx oxlint src vite.con
 - `src/config/morseTiming.ts` is the single consumer of `import.meta.env`; everything else receives resolved values as props.
 - Thresholds are build-time inlined: changing `.env` requires restarting the dev server or rebuilding to take effect. Unusable values fall back to defaults with warnings listed in the page footer.
 - The decoder covers A–Z only, matching the reference chart; unknown symbol paths are reported as unresolved, never guessed.
+- The chart lights exactly one chain at a time. New input hands the highlight over: the committed chain is lit only while nothing new is coming in, so `MorseChart` receives `isPressing` (press held) as well as `isTransmitting` — a symbol is only classified on release, so the press itself is what ends the previous highlight.
+- Chart scale is set by the `.chart` `max-width` (the drawing scales with its rendered width). The `.workbench` split at `72rem` is derived from that cap's floor: 43rem chart column + 2rem gap + 22rem text column + 4rem page padding = 71rem.
 
 ## Code Style
 

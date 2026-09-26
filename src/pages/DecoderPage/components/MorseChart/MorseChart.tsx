@@ -4,6 +4,7 @@ import type { DecodedLetter } from '@/domain/morse/decoderReducer'
 import {
   CHART_START,
   CHART_VIEW_BOX,
+  HUB_RADIUS,
   NODE_RADIUS,
   PILL_LENGTH,
   PILL_THICKNESS,
@@ -16,8 +17,6 @@ import {
 import { SignalHub } from './SignalHub'
 import styles from './MorseChart.module.css'
 
-const HUB_RADIUS = 112
-
 export type ChartChainState = 'idle' | 'active' | 'committed'
 export type ChartNodeState = ChartChainState | 'current'
 
@@ -26,6 +25,8 @@ export interface MorseChartProps {
   readonly pendingCharacter: string | null
   readonly lastLetter: DecodedLetter | null
   readonly commitCount: number
+  /** A press is being held right now: new input has started. */
+  readonly isPressing: boolean
   readonly isTransmitting: boolean
 }
 
@@ -93,14 +94,23 @@ export function MorseChart({
   pendingCharacter,
   lastLetter,
   commitCount,
+  isPressing,
   isTransmitting,
 }: MorseChartProps) {
   const hasActivePath = activePath !== ''
   const committedPath = lastLetter?.path ?? ''
 
+  /**
+   * New input hands the highlight over. It starts with the press itself — a symbol is
+   * only classified on release — so the previous letter's chain goes out the moment
+   * the next press begins or a symbol is already in flight, rather than staying lit
+   * beside the path being typed.
+   */
+  const hasHandedOver = hasActivePath || isPressing
+
   const chainStateOf = (path: string): ChartChainState => {
-    if (hasActivePath && isPathOnChain(path, activePath)) {
-      return 'active'
+    if (hasHandedOver) {
+      return isPathOnChain(path, activePath) ? 'active' : 'idle'
     }
 
     return committedPath !== '' && isPathOnChain(path, committedPath) ? 'committed' : 'idle'

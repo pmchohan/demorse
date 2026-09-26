@@ -16,6 +16,15 @@
   opacity: 0.45;
 }
 
+.xs {
+  width: 0.375rem;
+  height: 0.375rem;
+}
+
+.xs[data-symbol="-"] {
+  width: 0.9375rem;
+}
+
 .sm {
   width: 0.5rem;
   height: 0.5rem;

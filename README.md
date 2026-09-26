@@ -1,4 +1,4 @@
-# Morse Code Decoder
+# demorse
 
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
@@ -9,7 +9,8 @@ Decodes Morse code live as you hold the space bar. Every press is measured in
 milliseconds, classified against configurable timing windows, and walked along an
 interactive copy of the decoding chart. The whole chain stays lit — every dot and
 dash from the start hub out to the letter you are spelling — and the decoded text
-builds up underneath.
+builds up beside it. Starting the next letter hands the highlight over, so the
+chain behind you goes out.
 
 The chart mirrors `morse-code-decoder-chart-template-62459640-2850254368.jpg` in
 this folder: a spine runs through the start hub, dot children sit on it as
@@ -68,7 +69,8 @@ between the letters:
 | Pause past `GAP_MAX_MS` | Character closes and a word space is inserted |
 | Sequence with no letter (for example `..--`) | Reported as unresolved rather than guessed at |
 
-The decoded text, and one chip per committed letter, appear under the chart.
+Beside the chart sit the decoded text and a row of chips — one per committed letter,
+carrying that letter's marks rather than repeating its character.
 
 ## Project Structure
 
@@ -107,8 +109,3 @@ unit is about 100ms, so `100 / 300 / 300 / 900` for tap, hold, gap and gap max.
 
 Pull requests are welcome. Please open an issue first to discuss changes, and
 run `npm test` plus `npm run lint` before sending them.
-
-## License
-
-No license has been chosen for this project yet — add a `LICENSE` file before
-distributing it.

@@ -1,11 +1,10 @@
-/* Column width is paired with the chart's own cap (62rem) plus the paddings between
-   them, so the chart fills its card edge to edge and every section aligns. */
+/* Wide enough for the chart plus its transcript column, laid out in `.workbench`. */
 .page {
   position: relative;
   isolation: isolate;
   display: grid;
   gap: var(--space-6);
-  width: min(100%, 69rem);
+  width: min(100%, 96rem);
   margin: 0 auto;
   padding: var(--space-4) var(--space-4) var(--space-8);
 }
@@ -63,6 +62,14 @@
   animation: rise var(--duration-slow) var(--ease-out-quint) 90ms both;
 }
 
+/* Chart on the left, the text it decodes on the right; stacked until there is room
+   for both without shrinking the chart past its floor. */
+.workbench {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+
 .panelTitle {
   font-size: var(--font-size-xs);
   font-weight: 600;
@@ -91,6 +98,16 @@
 @media (min-width: 48rem) {
   .page {
     padding-inline: var(--space-6);
+  }
+}
+
+/* The split waits until the chart column can hold the chart's 40rem floor plus its
+   card padding, the gap, the text column and the page padding — 43 + 2 + 22 + 4 = 71rem
+   — so the drawing is never clipped once the two columns appear. Below that the pair
+   stacks and the chart keeps the full column width. */
+@media (min-width: 72rem) {
+  .workbench {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
   }
 }
 

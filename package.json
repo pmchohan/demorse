@@ -1,9 +1,9 @@
 {
-  "name": "morse-code-decoder",
+  "name": "demorse",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Live Morse code decoder with an interactive decoding-chart visualization, tap-timing thresholds from env vars",
+  "description": "demorse — live Morse code decoder with an interactive decoding-chart visualization, tap-timing thresholds from env vars",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

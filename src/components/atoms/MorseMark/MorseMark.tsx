@@ -1,7 +1,7 @@
 import type { MorseSymbol } from '@/domain/morse/morseAlphabet'
 import styles from './MorseMark.module.css'
 
-export type MorseMarkSize = 'sm' | 'md' | 'lg'
+export type MorseMarkSize = 'xs' | 'sm' | 'md' | 'lg'
 
 export interface MorseMarkProps {
   readonly symbol: MorseSymbol

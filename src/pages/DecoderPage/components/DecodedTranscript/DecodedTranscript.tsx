@@ -10,7 +10,10 @@ export interface DecodedTranscriptProps {
   readonly onClear: () => void
 }
 
-/** Live output: the decoded string plus one chip per committed letter. */
+/**
+ * Live output: the decoded string, plus one chip per committed letter holding that
+ * letter's marks — the character itself is already in the text above.
+ */
 export function DecodedTranscript({ text, letters, notice, onClear }: DecodedTranscriptProps) {
   const isEmpty = letters.length === 0
 
@@ -45,16 +48,18 @@ export function DecodedTranscript({ text, letters, notice, onClear }: DecodedTra
 
       {isEmpty ? null : (
         <ul className={styles.letters} aria-label="Committed letters">
+          {/* The letter itself is already in the text above, so each chip keeps only the
+              timing that produced it; the character stays as the chip's accessible name. */}
           {letters.map((letter, index) => (
             <li
               key={`${letter.path}-${index}`}
               className={styles.letter}
               data-latest={index === letters.length - 1}
+              aria-label={`${letter.character} ${letter.morse}`}
             >
-              <span className={styles.letterCharacter}>{letter.character}</span>
               <span className={styles.letterMorse}>
                 {morseToSymbols(letter.morse).map((symbol, markIndex) => (
-                  <MorseMark key={`${symbol}-${markIndex}`} symbol={symbol} size="sm" />
+                  <MorseMark key={`${symbol}-${markIndex}`} symbol={symbol} size="xs" />
                 ))}
               </span>
             </li>

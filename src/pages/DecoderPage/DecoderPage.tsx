@@ -25,29 +25,33 @@ export function DecoderPage() {
           <p className={styles.lead}>
             A short press is a dot, a longer hold is a dash, and the pause after it closes the
             letter. The chart lights the whole path your timing takes — from the start hub out to
-            the letter you are spelling — and the decoded text builds underneath.
+            the letter you are spelling — and the decoded text builds alongside it. Starting a new
+            letter hands the highlight over: the chain behind you goes out.
           </p>
         </section>
 
-        <section className={styles.chartPanel} aria-labelledby="chart-title">
-          <h2 className={styles.panelTitle} id="chart-title">
-            Decoding chart
-          </h2>
-          <MorseChart
-            activePath={session.activePath}
-            pendingCharacter={session.pendingCharacter}
-            lastLetter={session.lastLetter}
-            commitCount={state.commitCount}
-            isTransmitting={state.phase !== 'idle'}
-          />
-        </section>
+        <div className={styles.workbench}>
+          <section className={styles.chartPanel} aria-labelledby="chart-title">
+            <h2 className={styles.panelTitle} id="chart-title">
+              Decoding chart
+            </h2>
+            <MorseChart
+              activePath={session.activePath}
+              pendingCharacter={session.pendingCharacter}
+              lastLetter={session.lastLetter}
+              commitCount={state.commitCount}
+              isPressing={state.phase === 'holding'}
+              isTransmitting={state.phase !== 'idle'}
+            />
+          </section>
 
-        <DecodedTranscript
-          text={state.text}
-          letters={state.letters}
-          notice={state.notice}
-          onClear={session.clear}
-        />
+          <DecodedTranscript
+            text={state.text}
+            letters={state.letters}
+            notice={state.notice}
+            onClear={session.clear}
+          />
+        </div>
       </main>
 
       <footer className={styles.footer}>

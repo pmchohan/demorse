@@ -18,7 +18,7 @@ export function PageHeader({ theme, onToggleTheme }: PageHeaderProps) {
           <MorseMark symbol="." size="sm" />
           <MorseMark symbol="-" size="sm" />
         </span>
-        <span className={styles.brandName}>Morse Decoder</span>
+        <span className={styles.brandName}>demorse</span>
       </div>
 
       <button

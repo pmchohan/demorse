@@ -23,8 +23,7 @@
 .brandName {
   font-size: var(--font-size-sm);
   font-weight: 600;
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-tight);
   color: hsl(var(--color-fg-default));
 }
 

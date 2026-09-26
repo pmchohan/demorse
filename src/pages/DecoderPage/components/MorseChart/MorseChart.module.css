@@ -94,9 +94,11 @@
   fill: hsl(var(--color-brand-glow) / 0.2);
 }
 
+/* A quick flourish: it has to finish inside the letter gap so handing the highlight
+   over to the next press never cuts the pulse off mid-swell. */
 .node[data-state="committed"] .nodeDisc {
   fill: hsl(var(--color-success-500));
-  animation: node-pulse var(--duration-slow) var(--ease-out-quint);
+  animation: node-pulse var(--duration-base) var(--ease-out-quint);
 }
 
 .node[data-state="committed"] .nodeHalo {
@@ -213,7 +215,8 @@
 .hubLabel {
   fill: hsl(var(--color-fg-subtle));
   font-family: var(--font-mono);
-  font-size: 30px;
+  /* Sized against HUB_RADIUS: at 30px the caption ran as wide as the whole hub. */
+  font-size: 24px;
   font-weight: 500;
   letter-spacing: 0.34em;
   text-transform: uppercase;
