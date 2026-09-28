@@ -1,0 +1,1314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#08111f" />
+  <title>Morse Key — Keyboard Morse Decoder</title>
+  <style>
+    :root {
+      --bg: #070b12;
+      --panel: rgba(12, 19, 31, .88);
+      --panel-2: rgba(16, 26, 42, .72);
+      --border: rgba(151, 178, 210, .15);
+      --border-strong: rgba(108, 225, 210, .34);
+      --text: #f3f7fb;
+      --muted: #9cadc2;
+      --accent: #6ce1d2;
+      --accent-2: #8ab4ff;
+      --hot: #ffce73;
+      --danger: #ff7a8a;
+      --shadow: 0 24px 70px rgba(0,0,0,.35);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 5%, rgba(108,225,210,.10), transparent 28%),
+        radial-gradient(circle at 86% 10%, rgba(138,180,255,.10), transparent 25%),
+        linear-gradient(180deg, #070b12 0%, #09111c 45%, #070b12 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .shell {
+      width: min(1380px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 58px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 34px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 780;
+      letter-spacing: -.02em;
+      font-size: 18px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(108,225,210,.12);
+      border: 1px solid rgba(108,225,210,.22);
+      box-shadow: 0 0 0 5px rgba(108,225,210,.03);
+    }
+
+    .brand-mark svg { width: 20px; height: 20px; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 12px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.025);
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #647386;
+      box-shadow: 0 0 0 4px rgba(100,115,134,.10);
+    }
+    body.listening .status-dot {
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(108,225,210,.12), 0 0 20px rgba(108,225,210,.45);
+    }
+    body.listening .status { color: #cdece8; border-color: rgba(108,225,210,.2); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(360px, .85fr);
+      gap: 22px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+
+    .hero-copy, .control-card, .decode-card, .tree-card {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+    }
+
+    .hero-copy {
+      min-height: 390px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 34px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-copy::after {
+      content: "";
+      position: absolute;
+      inset: auto -10% -52% 50%;
+      height: 460px;
+      background: radial-gradient(circle, rgba(108,225,210,.13), transparent 67%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-weight: 720;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: clamp(40px, 5vw, 72px);
+      line-height: .98;
+      letter-spacing: -.06em;
+      margin: 0;
+      max-width: 720px;
+    }
+
+    .hero-copy p {
+      margin: 20px 0 0;
+      max-width: 650px;
+      font-size: 16px;
+      color: var(--muted);
+    }
+
+    .hero-pills {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.028);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: #c7d2df;
+    }
+
+    .key-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 390px;
+      padding: 24px;
+      border: 1px solid rgba(108,225,210,.18);
+      background: linear-gradient(180deg, rgba(13,28,40,.92), rgba(11,19,31,.92));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel-kicker { color: var(--muted); font-size: 12px; }
+    .mode-name { font-size: 18px; font-weight: 760; margin-top: 2px; }
+
+    .key-visual {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      min-height: 230px;
+      position: relative;
+    }
+
+    .key-cap {
+      width: 184px;
+      height: 184px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(108,225,210,.25);
+      background: radial-gradient(circle at 40% 35%, rgba(108,225,210,.12), rgba(108,225,210,.03) 50%, rgba(4,9,16,.65) 51%);
+      box-shadow: inset 0 0 0 12px rgba(255,255,255,.015), 0 0 0 20px rgba(108,225,210,.02), 0 18px 70px rgba(0,0,0,.36);
+      transition: transform .1s ease, box-shadow .1s ease, border-color .1s ease;
+    }
+
+    .key-cap::before {
+      content: "";
+      width: 104px;
+      height: 58px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: linear-gradient(180deg, #1d2a39, #101a28);
+      box-shadow: inset 0 0 20px rgba(255,255,255,.02), 0 20px 34px rgba(0,0,0,.26);
+      transform: perspective(300px) rotateX(48deg) translateY(-8px);
+    }
+
+    body.pressing .key-cap {
+      transform: translateY(4px) scale(.985);
+      border-color: rgba(108,225,210,.6);
+      box-shadow: inset 0 0 0 12px rgba(255,255,255,.018), 0 0 0 28px rgba(108,225,210,.04), 0 0 44px rgba(108,225,210,.14);
+    }
+
+    .press-prompt {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: var(--muted);
+      white-space: nowrap;
+      font-size: 12px;
+    }
+
+    .live-token {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+    }
+
+    .token {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: rgba(108,225,210,.08);
+      border: 1px solid rgba(108,225,210,.18);
+      color: var(--accent);
+      font-weight: 780;
+    }
+
+    .token.muted {
+      color: #718096;
+      border-color: var(--border);
+      background: rgba(255,255,255,.02);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr);
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+
+    .control-card { padding: 24px; }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 760;
+      letter-spacing: -.02em;
+      margin: 0 0 3px;
+    }
+
+    .section-subtitle { color: var(--muted); font-size: 12px; margin: 0 0 20px; }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      padding: 5px;
+      background: #080f19;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      margin-bottom: 18px;
+    }
+
+    .segment, .small-btn, .primary-btn, .secondary-btn, .key-bind {
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background .18s ease, border-color .18s ease, transform .18s ease, color .18s ease;
+    }
+    .segment {
+      padding: 11px 12px;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 650;
+      font-size: 13px;
+    }
+    .segment.active {
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(108,225,210,.13), rgba(108,225,210,.07));
+      border-color: rgba(108,225,210,.16);
+    }
+
+    .binding-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .binding-card {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: rgba(255,255,255,.02);
+    }
+    .binding-label { color: var(--muted); font-size: 11px; margin-bottom: 8px; }
+    .key-bind {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.035);
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .key-bind:hover, .small-btn:hover, .secondary-btn:hover { border-color: rgba(138,180,255,.32); }
+    .key-bind.listening { border-color: rgba(108,225,210,.44); box-shadow: 0 0 0 3px rgba(108,225,210,.07); }
+    kbd {
+      min-width: 26px;
+      padding: 3px 7px;
+      border-radius: 7px;
+      background: #0a111c;
+      border: 1px solid rgba(255,255,255,.12);
+      color: #e7edf4;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      box-shadow: 0 2px 0 rgba(255,255,255,.04);
+    }
+    .binding-hint { color: #748499; font-size: 10px; margin-top: 7px; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .stat {
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: rgba(255,255,255,.02);
+    }
+    .stat label { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .09em; margin-bottom: 5px; }
+    .stat strong { font-size: 15px; }
+
+    .actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 16px; }
+    .primary-btn, .secondary-btn, .small-btn {
+      border-radius: 11px;
+      padding: 10px 13px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .primary-btn {
+      color: #061016;
+      background: linear-gradient(180deg, #7be8dc, #5acbc0);
+      border-color: rgba(108,225,210,.6);
+      box-shadow: 0 9px 24px rgba(108,225,210,.12);
+    }
+    .primary-btn:hover { transform: translateY(-1px); }
+    .primary-btn.active {
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.13);
+      box-shadow: none;
+    }
+    .secondary-btn { background: rgba(255,255,255,.025); border-color: var(--border); color: #ccd6e2; }
+    .small-btn { padding: 8px 10px; background: rgba(255,255,255,.025); border-color: var(--border); color: #c7d2df; }
+
+    .sound-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #c8d2de;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle input { position: absolute; opacity: 0; pointer-events: none; }
+    .toggle-track {
+      width: 38px;
+      height: 22px;
+      border-radius: 999px;
+      padding: 3px;
+      background: #1b2635;
+      border: 1px solid var(--border);
+      transition: .18s ease;
+    }
+    .toggle-track::after {
+      content: "";
+      display: block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #7a8899;
+      transition: transform .18s ease, background .18s ease;
+    }
+    .toggle input:checked + .toggle-track { background: rgba(108,225,210,.14); border-color: rgba(108,225,210,.28); }
+    .toggle input:checked + .toggle-track::after { transform: translateX(16px); background: var(--accent); }
+
+    input[type="range"] { accent-color: var(--accent); flex: 1; min-width: 80px; }
+
+    .decode-card {
+      padding: 22px 24px 24px;
+      margin-bottom: 22px;
+    }
+    .decode-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+    .output {
+      min-height: 125px;
+      margin-top: 14px;
+      padding: 19px;
+      border: 1px solid rgba(108,225,210,.13);
+      background: rgba(108,225,210,.03);
+      border-radius: 16px;
+      font-size: clamp(24px, 3.5vw, 40px);
+      line-height: 1.15;
+      letter-spacing: -.03em;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .output.placeholder { color: #5e6c7d; }
+    .output-caret { display: inline-block; width: 2px; height: .9em; margin-left: 3px; vertical-align: -.05em; background: var(--accent); animation: blink 1.1s infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .decode-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 13px;
+    }
+    .readout {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+    .readout strong { color: #dbe5ef; }
+    .symbol-stream { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent); }
+
+    .tree-card { overflow: hidden; }
+    .tree-head {
+      padding: 22px 24px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tree-note { color: var(--muted); font-size: 11px; max-width: 460px; text-align: right; }
+
+    .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .legend-item { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .legend-shape { width: 8px; height: 8px; border-radius: 50%; background: #5c7086; }
+    .legend-shape.live { background: var(--accent); box-shadow: 0 0 13px rgba(108,225,210,.4); }
+    .legend-shape.path { background: var(--accent-2); }
+
+    .tree-viewport {
+      overflow: auto;
+      padding: 24px;
+      overscroll-behavior: contain;
+    }
+    .tree-stage {
+      position: relative;
+      min-width: 1040px;
+      height: 545px;
+      margin: 0 auto;
+    }
+    #treeLines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+    .tree-node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #0e1b2a;
+      border: 1px solid rgba(131,153,177,.28);
+      box-shadow: 0 9px 22px rgba(0,0,0,.25);
+      cursor: pointer;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+      user-select: none;
+    }
+    .tree-node:hover { transform: translate(-50%, -50%) scale(1.08); border-color: rgba(138,180,255,.5); }
+    .tree-node .letter { font-size: 14px; font-weight: 800; }
+    .tree-node .morse { position: absolute; top: calc(100% + 6px); white-space: nowrap; color: #74869a; font-size: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .tree-node.path { border-color: rgba(138,180,255,.75); background: rgba(138,180,255,.08); box-shadow: 0 0 0 5px rgba(138,180,255,.05), 0 8px 24px rgba(0,0,0,.22); }
+    .tree-node.current { border-color: rgba(108,225,210,.9); background: rgba(108,225,210,.1); box-shadow: 0 0 0 6px rgba(108,225,210,.07), 0 0 28px rgba(108,225,210,.13); }
+    .tree-node.dim { opacity: .35; }
+
+    .line { stroke: rgba(109,133,158,.25); stroke-width: 2; }
+    .line.path { stroke: rgba(138,180,255,.68); stroke-width: 3; }
+
+    .footnote { padding: 16px 24px 22px; color: #627286; font-size: 11px; border-top: 1px solid var(--border); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translate(-50%, 18px);
+      opacity: 0;
+      pointer-events: none;
+      padding: 11px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(108,225,210,.2);
+      background: #0e1a29;
+      box-shadow: 0 16px 40px rgba(0,0,0,.35);
+      color: #dce7ee;
+      font-size: 12px;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .help {
+      margin-top: 12px;
+      color: #6f7f91;
+      font-size: 11px;
+    }
+
+    @media (max-width: 1100px) {
+      .hero, .controls { grid-template-columns: 1fr; }
+      .hero-copy, .key-panel { min-height: 330px; }
+      .tree-stage { min-width: 960px; }
+    }
+
+    @media (max-width: 680px) {
+      .shell { width: min(100% - 20px, 1380px); padding-top: 15px; }
+      .topbar { margin-bottom: 18px; }
+      .hero-copy, .key-panel, .control-card, .decode-card { padding: 18px; }
+      .hero-copy { min-height: 360px; }
+      .key-panel { min-height: 350px; }
+      .binding-grid, .two-col { grid-template-columns: 1fr; }
+      .tree-head { padding: 18px; align-items: flex-start; flex-direction: column; }
+      .tree-note { text-align: left; }
+      .decode-footer { align-items: flex-start; flex-direction: column; }
+      .tree-viewport { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Morse Key home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14" />
+            <circle cx="5" cy="12" r="2" />
+            <path d="M10 8l4 8" />
+            <path d="M15 8v8" />
+          </svg>
+        </span>
+        Morse Key
+      </a>
+      <div class="status" aria-live="polite"><span class="status-dot"></span><span id="statusText">Keyboard idle</span></div>
+    </header>
+
+    <section class="hero" id="top">
+      <article class="hero-copy">
+        <div class="eyebrow">Keyboard Morse decoder</div>
+        <h1>Type Morse.<br><span style="color:var(--accent)">Hear Morse.</span></h1>
+        <p>Tap and hold a key like a telegraph operator, or dedicate two keys to dot and dash. The decoder uses pauses to turn your rhythm into letters, words, and new lines.</p>
+        <div class="hero-pills">
+          <span class="pill">Single-key timing</span>
+          <span class="pill">Two-key paddle</span>
+          <span class="pill">Live tree guidance</span>
+          <span class="pill">No backend</span>
+        </div>
+      </article>
+
+      <article class="key-panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-kicker">Live key</div>
+            <div class="mode-name" id="heroMode">Single key</div>
+          </div>
+          <div class="pill" id="heroBinding">Any key</div>
+        </div>
+        <div class="key-visual">
+          <div class="key-cap" aria-hidden="true"></div>
+          <div class="press-prompt" id="pressPrompt">Arm the keyboard, then press any key</div>
+        </div>
+        <div class="live-token" id="liveToken" aria-live="polite"><span class="token muted">•</span><span class="token muted">—</span></div>
+      </article>
+    </section>
+
+    <section class="controls">
+      <article class="control-card">
+        <h2 class="section-title">Input setup</h2>
+        <p class="section-subtitle">Pick the interaction that feels natural to you.</p>
+
+        <div class="segmented" role="tablist" aria-label="Morse input mode">
+          <button class="segment active" data-mode="single" role="tab" aria-selected="true">1 · Same key</button>
+          <button class="segment" data-mode="dual" role="tab" aria-selected="false">2 · Two keys</button>
+        </div>
+
+        <div id="singleMode">
+          <div class="binding-card">
+            <div class="binding-label">Single key rule</div>
+            <div style="font-size:13px;color:#dce5ee;font-weight:650">Short press = dit <span style="color:#73849a">·</span> &nbsp; Long press = dah <span style="color:#73849a">—</span></div>
+            <div class="binding-hint">Default threshold: 240 ms. Tune it below if your keyboard or typing style needs it.</div>
+          </div>
+        </div>
+
+        <div id="dualMode" hidden>
+          <div class="binding-grid">
+            <div class="binding-card">
+              <div class="binding-label">DIT / DOT key</div>
+              <button class="key-bind" id="bindDit"><span id="ditKeyLabel"><kbd>F</kbd></span><span>Set</span></button>
+              <div class="binding-hint">Press any key after tapping Set.</div>
+            </div>
+            <div class="binding-card">
+              <div class="binding-label">DAH / DASH key</div>
+              <button class="key-bind" id="bindDah"><span id="dahKeyLabel"><kbd>J</kbd></span><span>Set</span></button>
+              <div class="binding-hint">A classic two-key paddle feel.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="stat">
+            <label>Dot / dash threshold</label>
+            <strong id="thresholdValue">240 ms</strong>
+            <input id="threshold" type="range" min="120" max="600" step="10" value="240" aria-label="Dot dash threshold" />
+          </div>
+          <div class="stat">
+            <label>Character gap</label>
+            <strong id="charGapValue">650 ms</strong>
+            <input id="charGap" type="range" min="350" max="1200" step="25" value="650" aria-label="Character gap" />
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="stat">
+            <label>Word gap</label>
+            <strong id="wordGapValue">1300 ms</strong>
+            <input id="wordGap" type="range" min="900" max="2400" step="50" value="1300" aria-label="Word gap" />
+          </div>
+          <div class="stat">
+            <label>New line gap</label>
+            <strong id="newlineGapValue">2200 ms</strong>
+            <input id="newlineGap" type="range" min="1600" max="4000" step="100" value="2200" aria-label="New line gap" />
+          </div>
+        </div>
+
+        <div class="sound-row">
+          <label class="toggle">
+            <input id="soundToggle" type="checkbox" checked />
+            <span class="toggle-track"></span>
+            Telegraph sidetone
+          </label>
+          <input id="volume" type="range" min="0" max="1" step="0.02" value="0.46" aria-label="Sound volume" />
+          <span style="color:#728195;font-size:11px" id="volumeValue">46%</span>
+        </div>
+
+        <div class="actions">
+          <button class="primary-btn" id="armBtn">Arm keyboard</button>
+          <button class="secondary-btn" id="clearBtn">Clear</button>
+          <button class="secondary-btn" id="copyBtn">Copy text</button>
+        </div>
+        <div class="help">The page listens only while armed. Escape disarms it. Your text never leaves this page.</div>
+      </article>
+
+      <article class="control-card">
+        <h2 class="section-title">How the rhythm becomes text</h2>
+        <p class="section-subtitle">You do not need to press Enter or Space. Pauses are the separators.</p>
+
+        <div class="stat" style="margin-bottom:10px">
+          <label>One press</label>
+          <strong><span class="symbol-stream">·</span> or <span class="symbol-stream">—</span> → Morse symbol</strong>
+        </div>
+        <div class="stat" style="margin-bottom:10px">
+          <label>Short pause</label>
+          <strong>finishes the current character</strong>
+        </div>
+        <div class="stat" style="margin-bottom:10px">
+          <label>Longer pause</label>
+          <strong>adds a space between words</strong>
+        </div>
+        <div class="stat">
+          <label>Longest pause</label>
+          <strong>starts a new line</strong>
+        </div>
+
+        <div class="actions" style="margin-top:18px">
+          <button class="small-btn" id="exampleBtn">Type “SOS” for me</button>
+          <button class="small-btn" id="soundTestBtn">Test sidetone</button>
+        </div>
+
+        <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+          <div class="panel-kicker">Current signal</div>
+          <div id="signalDescription" style="margin-top:5px;color:#d8e1eb;font-size:14px;font-weight:650">Waiting for input</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="decode-card">
+      <div class="decode-top">
+        <div>
+          <h2 class="section-title">Decoded message</h2>
+          <p class="section-subtitle">Letters appear when your character gap is reached.</p>
+        </div>
+        <button class="small-btn" id="spaceBtn" title="Insert a space">Insert space</button>
+      </div>
+      <div id="output" class="output placeholder">Start with a dit or dah.<span class="output-caret"></span></div>
+      <div class="decode-footer">
+        <div class="readout"><span>Current Morse:</span><strong class="symbol-stream" id="currentMorse">—</strong><span>→</span><strong id="currentLetter">?</strong></div>
+        <div class="readout"><span>Characters:</span><strong id="charCount">0</strong><span>·</span><span>Words:</span><strong id="wordCount">0</strong></div>
+      </div>
+    </section>
+
+    <section class="tree-card">
+      <div class="tree-head">
+        <div>
+          <div class="eyebrow" style="margin-bottom:5px">Navigation chart</div>
+          <h2 class="section-title" style="font-size:24px">Morse tree</h2>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-shape path"></span> path taken</span>
+            <span class="legend-item"><span class="legend-shape live"></span> current character</span>
+            <span class="legend-item"><span class="legend-shape"></span> available letter</span>
+          </div>
+        </div>
+        <div class="tree-note">Dit branches left. Dah branches right. Follow the highlighted path while you build the current character.</div>
+      </div>
+      <div class="tree-viewport">
+        <div class="tree-stage" id="treeStage" aria-label="Interactive Morse code tree">
+          <svg id="treeLines" aria-hidden="true"></svg>
+        </div>
+      </div>
+      <div class="footnote">Tip: click any letter in the tree to preview its Morse pattern. The same decoder can produce it from the keyboard.</div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const MORSE = {
+      A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.', G: '--.', H: '....', I: '..', J: '.---', K: '-.-', L: '.-..', M: '--',
+      N: '-.', O: '---', P: '.--.', Q: '--.-', R: '.-.', S: '...', T: '-', U: '..-', V: '...-', W: '.--', X: '-..-', Y: '-.--', Z: '--..',
+      0: '-----', 1: '.----', 2: '..---', 3: '...--', 4: '....-', 5: '.....', 6: '-....', 7: '--...', 8: '---..', 9: '----.'
+    };
+    const REVERSE = Object.fromEntries(Object.entries(MORSE).map(([k,v]) => [v, k]));
+
+    const state = {
+      mode: 'single',
+      armed: false,
+      capturingBinding: null,
+      ditKey: 'KeyF',
+      dahKey: 'KeyJ',
+      ditLabel: 'F',
+      dahLabel: 'J',
+      activeCode: null,
+      pressStartedAt: 0,
+      currentMorse: '',
+      output: '',
+      charTimer: null,
+      wordTimer: null,
+      newlineTimer: null,
+      lastSignal: '',
+      audio: null,
+      soundOn: true,
+      volume: .46,
+      threshold: 240,
+      charGap: 650,
+      wordGap: 1300,
+      newlineGap: 2200,
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const body = document.body;
+
+    function prettyKey(e) {
+      if (e.key === ' ') return 'Space';
+      if (e.key === 'Escape') return 'Esc';
+      if (e.key === 'Tab') return 'Tab';
+      if (e.key === 'Enter') return 'Enter';
+      if (e.key === 'Backspace') return 'Backspace';
+      if (e.key === 'Control') return 'Ctrl';
+      if (e.key === 'Shift') return 'Shift';
+      if (e.key === 'Alt') return 'Alt';
+      if (e.key === 'Meta') return 'Meta';
+      if (e.key && e.key.length === 1) return e.key.toUpperCase();
+      return e.key || e.code;
+    }
+
+    function ensureAudio() {
+      if (state.audio) return state.audio;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      state.audio = { ctx, gain: ctx.createGain(), tone: null };
+      state.audio.gain.gain.value = state.volume;
+      state.audio.gain.connect(ctx.destination);
+      return state.audio;
+    }
+
+    function playClickAndStartTone() {
+      if (!state.soundOn) return;
+      const { ctx, gain } = ensureAudio();
+      if (ctx.state === 'suspended') ctx.resume();
+
+      // Tiny mechanical click: short filtered noise burst.
+      const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * .025), ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        const decay = 1 - i / data.length;
+        data[i] = (Math.random() * 2 - 1) * decay * decay;
+      }
+      const src = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const clickGain = ctx.createGain();
+      filter.type = 'bandpass';
+      filter.frequency.value = 2200;
+      filter.Q.value = 1.5;
+      clickGain.gain.setValueAtTime(.26, ctx.currentTime);
+      clickGain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .025);
+      src.buffer = buffer;
+      src.connect(filter).connect(clickGain).connect(gain);
+      src.start();
+      src.stop(ctx.currentTime + .03);
+
+      // Sidetone: a near-immediate clean electronic beep after the click.
+      const osc = ctx.createOscillator();
+      const toneGain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = 760;
+      toneGain.gain.setValueAtTime(.0001, ctx.currentTime + .018);
+      toneGain.gain.exponentialRampToValueAtTime(.18, ctx.currentTime + .024);
+      osc.connect(toneGain).connect(gain);
+      osc.start(ctx.currentTime + .018);
+      state.audio.tone = { osc, toneGain };
+    }
+
+    function stopTone() {
+      if (!state.audio?.tone) return;
+      const { ctx } = state.audio;
+      const { osc, toneGain } = state.audio.tone;
+      const now = ctx.currentTime;
+      toneGain.gain.cancelScheduledValues(now);
+      toneGain.gain.setValueAtTime(Math.max(toneGain.gain.value, .0001), now);
+      toneGain.gain.exponentialRampToValueAtTime(.0001, now + .022);
+      try { osc.stop(now + .028); } catch {}
+      state.audio.tone = null;
+    }
+
+    function testSound() {
+      playClickAndStartTone();
+      setTimeout(stopTone, 120);
+    }
+
+    function armKeyboard() {
+      state.armed = !state.armed;
+      if (state.armed) {
+        ensureAudio();
+        document.body.classList.add('listening');
+        $('armBtn').textContent = 'Disarm keyboard';
+        $('armBtn').classList.add('active');
+        $('statusText').textContent = 'Keyboard armed';
+        $('pressPrompt').textContent = 'Press any key — build your Morse';
+      } else {
+        disarm();
+      }
+    }
+
+    function disarm() {
+      state.armed = false;
+      state.capturingBinding = null;
+      if (state.activeCode) finishPress(state.activeCode, state.activeKeyEvent);
+      stopTone();
+      body.classList.remove('listening', 'pressing');
+      $('armBtn').textContent = 'Arm keyboard';
+      $('armBtn').classList.remove('active');
+      $('statusText').textContent = 'Keyboard idle';
+      $('pressPrompt').textContent = 'Arm the keyboard, then press any key';
+      document.querySelectorAll('.key-bind').forEach(b => b.classList.remove('listening'));
+    }
+
+    function clearTimers() {
+      ['charTimer','wordTimer','newlineTimer'].forEach(k => { if (state[k]) clearTimeout(state[k]); state[k] = null; });
+    }
+
+    function resetGapTimers() {
+      clearTimers();
+      state.charTimer = setTimeout(finalizeCharacter, state.charGap);
+      state.wordTimer = setTimeout(() => {
+        finalizeCharacter();
+        if (!state.output.endsWith(' ') && !state.output.endsWith('\n')) state.output += ' ';
+        if (state.wordTimer) clearTimeout(state.wordTimer);
+        state.wordTimer = null;
+        renderOutput();
+        showSignal('Word pause detected');
+      }, state.wordGap);
+      state.newlineTimer = setTimeout(() => {
+        finalizeCharacter();
+        if (state.output.endsWith(' ')) state.output = state.output.slice(0, -1);
+        if (!state.output.endsWith('\n')) state.output += '\n';
+        if (state.wordTimer) clearTimeout(state.wordTimer);
+        if (state.newlineTimer) clearTimeout(state.newlineTimer);
+        state.wordTimer = state.newlineTimer = null;
+        renderOutput();
+        showSignal('New line pause detected');
+      }, state.newlineGap);
+    }
+
+    function finalizeCharacter() {
+      if (state.charTimer) clearTimeout(state.charTimer);
+      state.charTimer = null;
+      if (!state.currentMorse) return;
+      const decoded = REVERSE[state.currentMorse] || '□';
+      state.output += decoded;
+      state.currentMorse = '';
+      renderOutput();
+      updateCurrentLetter();
+      updateTree();
+      return decoded;
+    }
+
+    function commitSymbol(symbol, explicit = false) {
+      clearTimers();
+      state.currentMorse += symbol;
+      const letter = REVERSE[state.currentMorse] || '';
+      $('currentMorse').textContent = state.currentMorse.replace(/\./g,'·').replace(/-/g,'—');
+      $('currentLetter').textContent = letter || '…';
+      updateLiveToken();
+      updateTree();
+      showSignal(symbol === '.' ? 'Dit / dot' : 'Dah / dash');
+      if (!explicit) resetGapTimers();
+    }
+
+    function finishPress(code, event) {
+      if (!state.activeCode || code !== state.activeCode) return;
+      const duration = performance.now() - state.pressStartedAt;
+      const symbol = state.mode === 'single'
+        ? (duration < state.threshold ? '.' : '-')
+        : (code === state.ditKey ? '.' : '-');
+      state.activeCode = null;
+      state.activeKeyEvent = null;
+      body.classList.remove('pressing');
+      stopTone();
+      commitSymbol(symbol);
+      showSignal(`${symbol === '.' ? 'Dit' : 'Dah'} · ${Math.round(duration)} ms`);
+    }
+
+    function beginPress(code, keyEvent) {
+      if (state.activeCode) return;
+      state.activeCode = code;
+      state.activeKeyEvent = keyEvent;
+      state.pressStartedAt = performance.now();
+      body.classList.add('pressing');
+      playClickAndStartTone();
+      showSignal('Key down — listening…');
+    }
+
+    function handleKeyDown(e) {
+      if (state.capturingBinding) {
+        if (['Control','Shift','Alt','Meta'].includes(e.key)) return;
+        e.preventDefault();
+        const label = prettyKey(e);
+        const target = state.capturingBinding;
+        if (target === 'dit') { state.ditKey = e.code; state.ditLabel = label; }
+        if (target === 'dah') { state.dahKey = e.code; state.dahLabel = label; }
+        state.capturingBinding = null;
+        updateBindings();
+        toast(`${target === 'dit' ? 'Dit' : 'Dah'} key set to ${label}`);
+        return;
+      }
+
+      if (!state.armed || e.repeat) return;
+      if (e.key === 'Escape') { e.preventDefault(); disarm(); return; }
+      // Don't let browser navigation/scroll/shortcut behavior interfere with Morse input.
+      e.preventDefault();
+
+      if (state.mode === 'dual' && e.code !== state.ditKey && e.code !== state.dahKey) return;
+      beginPress(e.code, e);
+    }
+
+    function handleKeyUp(e) {
+      if (!state.armed) return;
+      if (!state.activeCode || e.code !== state.activeCode) return;
+      e.preventDefault();
+      finishPress(e.code, e);
+    }
+
+    function updateBindings() {
+      $('ditKeyLabel').innerHTML = `<kbd>${escapeHtml(state.ditLabel)}</kbd>`;
+      $('dahKeyLabel').innerHTML = `<kbd>${escapeHtml(state.dahLabel)}</kbd>`;
+      $('heroBinding').textContent = state.mode === 'single' ? 'Any key' : `${state.ditLabel} · ${state.dahLabel}`;
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      document.querySelectorAll('.segment').forEach(btn => {
+        const active = btn.dataset.mode === mode;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-selected', String(active));
+      });
+      $('singleMode').hidden = mode !== 'single';
+      $('dualMode').hidden = mode !== 'dual';
+      $('heroMode').textContent = mode === 'single' ? 'Single key' : 'Two keys';
+      updateBindings();
+      if (state.currentMorse) {
+        state.currentMorse = '';
+        clearTimers();
+        updateCurrentLetter();
+        updateLiveToken();
+        updateTree();
+      }
+      showSignal(mode === 'single' ? 'Single key: duration chooses dot/dash' : `Two keys: ${state.ditLabel}=dit, ${state.dahLabel}=dah`);
+    }
+
+    function updateCurrentLetter() {
+      $('currentMorse').textContent = state.currentMorse ? state.currentMorse.replace(/\./g,'·').replace(/-/g,'—') : '—';
+      $('currentLetter').textContent = state.currentMorse ? (REVERSE[state.currentMorse] || '…') : '?';
+    }
+
+    function updateLiveToken() {
+      const wrap = $('liveToken');
+      wrap.innerHTML = '';
+      if (!state.currentMorse) {
+        wrap.innerHTML = '<span class="token muted">·</span><span class="token muted">—</span>';
+        return;
+      }
+      for (const s of state.currentMorse) {
+        const span = document.createElement('span');
+        span.className = 'token';
+        span.textContent = s === '.' ? '·' : '—';
+        wrap.appendChild(span);
+      }
+    }
+
+    function renderOutput() {
+      const el = $('output');
+      const hasContent = !!state.output;
+      el.classList.toggle('placeholder', !hasContent);
+      el.textContent = hasContent ? state.output : 'Start with a dit or dah.';
+      const caret = document.createElement('span');
+      caret.className = 'output-caret';
+      el.appendChild(caret);
+      const chars = state.output.replace(/\s/g,'').length;
+      const words = state.output.trim() ? state.output.trim().split(/\s+/).length : 0;
+      $('charCount').textContent = chars;
+      $('wordCount').textContent = words;
+    }
+
+    function showSignal(msg) {
+      state.lastSignal = msg;
+      $('signalDescription').textContent = msg;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    }
+
+    function toast(msg) {
+      const el = $('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => el.classList.remove('show'), 1600);
+    }
+
+    // Build the classic Morse decoding tree for A–Z.
+    const treeStage = $('treeStage');
+    const treeLines = $('treeLines');
+    const treeLetters = Object.entries(MORSE).filter(([k]) => /[A-Z]/.test(k));
+    const treePositions = {};
+    const maxDepth = 4;
+    const stageWidth = 1040;
+    const rowY = [115, 230, 345, 460];
+
+    for (const [letter, code] of treeLetters) {
+      if (code.length > maxDepth) continue;
+      const level = code.length;
+      const index = parseInt(code.replace(/\./g,'0').replace(/-/g,'1'), 2);
+      const slots = 2 ** level;
+      const x = ((index + .5) / slots) * stageWidth;
+      const y = rowY[level - 1];
+      treePositions[letter] = { x, y, code };
+    }
+
+    function buildTree() {
+      Object.entries(treePositions).forEach(([letter, p]) => {
+        const node = document.createElement('button');
+        node.className = 'tree-node';
+        node.dataset.letter = letter;
+        node.style.left = `${p.x}px`;
+        node.style.top = `${p.y}px`;
+        node.setAttribute('aria-label', `${letter}, Morse ${p.code}`);
+        node.innerHTML = `<span class="letter">${letter}</span><span class="morse">${p.code.replace(/\./g,'·').replace(/-/g,'—')}</span>`;
+        node.addEventListener('click', () => {
+          state.currentMorse = p.code;
+          updateCurrentLetter();
+          updateLiveToken();
+          updateTree();
+          showSignal(`Preview: ${letter} = ${p.code.replace(/\./g,'·').replace(/-/g,'—')}`);
+          if (state.soundOn) {
+            // Preview the pattern with a compact cadence.
+            clearTimers();
+            let t = 0;
+            for (const symbol of p.code) {
+              setTimeout(() => { playClickAndStartTone(); }, t);
+              setTimeout(stopTone, t + (symbol === '.' ? 90 : 240));
+              t += symbol === '.' ? 170 : 320;
+            }
+          }
+        });
+        treeStage.appendChild(node);
+      });
+
+      // Root/start marker, followed by the standard left=dit / right=dah tree.
+      const root = document.createElement('div');
+      root.className = 'tree-node current';
+      root.style.left = '520px';
+      root.style.top = '24px';
+      root.style.cursor = 'default';
+      root.innerHTML = '<span class="letter">START</span>';
+      treeStage.appendChild(root);
+
+      const rootLabel = document.createElement('div');
+      rootLabel.style.cssText = 'position:absolute;left:520px;top:62px;transform:translateX(-50%);font-size:10px;color:#728499;letter-spacing:.08em;text-transform:uppercase';
+      rootLabel.textContent = 'DIT ←   ·   DAH →';
+      treeStage.appendChild(rootLabel);
+
+      const e = treePositions.E;
+      const t = treePositions.T;
+      for (const child of [e, t]) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.dataset.from = '';
+        line.dataset.to = child.code;
+        line.setAttribute('x1', '520');
+        line.setAttribute('y1', '52');
+        line.setAttribute('x2', child.x);
+        line.setAttribute('y2', child.y - 28);
+        line.classList.add('line');
+        treeLines.appendChild(line);
+      }
+
+      // Draw lines from each letter to its child node.
+      for (const [letter, p] of Object.entries(treePositions)) {
+        if (p.code.length === 1) continue;
+        const parentCode = p.code.slice(0, -1);
+        const parent = Object.values(treePositions).find(x => x.code === parentCode);
+        if (!parent) continue;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.dataset.from = parentCode;
+        line.dataset.to = p.code;
+        line.setAttribute('x1', parent.x);
+        line.setAttribute('y1', parent.y + 28);
+        line.setAttribute('x2', p.x);
+        line.setAttribute('y2', p.y - 28);
+        line.classList.add('line');
+        treeLines.appendChild(line);
+      }
+    }
+
+    function updateTree() {
+      const current = state.currentMorse;
+      document.querySelectorAll('.tree-node').forEach(node => {
+        const p = treePositions[node.dataset.letter];
+        const isCurrent = !!current && p.code === current;
+        const isPath = !!current && p.code.startsWith(current) && p.code !== current;
+        node.classList.toggle('current', isCurrent);
+        node.classList.toggle('path', isPath);
+        node.classList.toggle('dim', !!current && !(isCurrent || isPath) && !current.startsWith(p.code));
+      });
+      treeLines.querySelectorAll('.line').forEach(line => {
+        if (!current) {
+          line.classList.remove('path');
+          return;
+        }
+        if (!line.dataset.from) {
+          const isRootPath = current.startsWith(line.dataset.to.slice(0, 1));
+          line.classList.toggle('path', isRootPath);
+          return;
+        }
+        const parent = line.dataset.from;
+        const child = line.dataset.to;
+        const isPath = current.startsWith(child) || (current.startsWith(parent) && current[parent.length] === child[parent.length]);
+        line.classList.toggle('path', !!isPath);
+      });
+    }
+
+    function insertSpace() {
+      finalizeCharacter();
+      clearTimers();
+      if (state.output && !state.output.endsWith(' ') && !state.output.endsWith('\n')) state.output += ' ';
+      renderOutput();
+    }
+
+    function resetAll() {
+      state.currentMorse = '';
+      state.output = '';
+      clearTimers();
+      updateCurrentLetter();
+      updateLiveToken();
+      renderOutput();
+      updateTree();
+      showSignal('Waiting for input');
+    }
+
+    function copyText() {
+      const text = state.output.replace(/\n+$/,'');
+      if (!text) return toast('Nothing to copy yet');
+      navigator.clipboard?.writeText(text).then(() => toast('Copied to clipboard')).catch(() => toast('Clipboard access was blocked'));
+    }
+
+    function typeSos() {
+      const pattern = '... --- ...';
+      resetAll();
+      const symbols = [
+        ['.','.','.'], ['-','-','-'], ['.','.','.']
+      ];
+      let t = 0;
+      for (let i = 0; i < symbols.length; i++) {
+        for (const s of symbols[i]) {
+          setTimeout(() => commitSymbol(s, true), t);
+          t += s === '.' ? 170 : 330;
+        }
+        setTimeout(finalizeCharacter, t);
+        t += 330;
+      }
+      setTimeout(() => showSignal(`Example complete: ${pattern}`), t + 20);
+    }
+
+    $('armBtn').addEventListener('click', armKeyboard);
+    $('clearBtn').addEventListener('click', resetAll);
+    $('copyBtn').addEventListener('click', copyText);
+    $('spaceBtn').addEventListener('click', insertSpace);
+    $('exampleBtn').addEventListener('click', typeSos);
+    $('soundTestBtn').addEventListener('click', testSound);
+
+    document.querySelectorAll('.segment').forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode)));
+
+    $('bindDit').addEventListener('click', () => {
+      if (state.capturingBinding === 'dit') state.capturingBinding = null;
+      else state.capturingBinding = 'dit';
+      document.querySelectorAll('.key-bind').forEach(b => b.classList.remove('listening'));
+      if (state.capturingBinding) $('bindDit').classList.add('listening');
+      showSignal(state.capturingBinding ? 'Press a key to bind dit' : 'Binding cancelled');
+    });
+    $('bindDah').addEventListener('click', () => {
+      if (state.capturingBinding === 'dah') state.capturingBinding = null;
+      else state.capturingBinding = 'dah';
+      document.querySelectorAll('.key-bind').forEach(b => b.classList.remove('listening'));
+      if (state.capturingBinding) $('bindDah').classList.add('listening');
+      showSignal(state.capturingBinding ? 'Press a key to bind dah' : 'Binding cancelled');
+    });
+
+    $('soundToggle').addEventListener('change', e => {
+      state.soundOn = e.target.checked;
+      if (!state.soundOn) stopTone();
+    });
+    $('volume').addEventListener('input', e => {
+      state.volume = Number(e.target.value);
+      $('volumeValue').textContent = `${Math.round(state.volume * 100)}%`;
+      if (state.audio) state.audio.gain.gain.value = state.volume;
+    });
+    $('threshold').addEventListener('input', e => {
+      state.threshold = Number(e.target.value);
+      $('thresholdValue').textContent = `${state.threshold} ms`;
+    });
+    $('charGap').addEventListener('input', e => {
+      state.charGap = Number(e.target.value);
+      $('charGapValue').textContent = `${state.charGap} ms`;
+    });
+    $('wordGap').addEventListener('input', e => {
+      state.wordGap = Number(e.target.value);
+      $('wordGapValue').textContent = `${state.wordGap} ms`;
+      if (state.wordGap <= state.charGap) state.wordGap = state.charGap + 50;
+      $('wordGapValue').textContent = `${state.wordGap} ms`;
+    });
+    $('newlineGap').addEventListener('input', e => {
+      state.newlineGap = Number(e.target.value);
+      $('newlineGapValue').textContent = `${state.newlineGap} ms`;
+      if (state.newlineGap <= state.wordGap) state.newlineGap = state.wordGap + 100;
+      $('newlineGapValue').textContent = `${state.newlineGap} ms`;
+    });
+
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
+    window.addEventListener('keyup', handleKeyUp, { passive: false });
+    window.addEventListener('blur', () => {
+      if (state.activeCode) finishPress(state.activeCode, state.activeKeyEvent);
+    });
+
+    buildTree();
+    updateTree();
+    updateBindings();
+    renderOutput();
+  </script>
+</body>
+</html>

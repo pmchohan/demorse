@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vintage Morse Code Decoder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons (using a reliable cdn) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Courier Prime', 'monospace'],
+                    },
+                    colors: {
+                        vintage: {
+                            50: '#f9f6f0',
+                            100: '#f0eade',
+                            200: '#e1d4bf',
+                            300: '#cdb79a',
+                            400: '#b79471',
+                            500: '#a67b56',
+                            600: '#9b674b',
+                            700: '#81513f',
+                            800: '#6a4336',
+                            900: '#56382e',
+                            950: '#2f1c16',
+                        },
+                        brass: '#b5a642',
+                        ink: '#1a1c20'
+                    },
+                    boxShadow: {
+                        'skeuo': 'inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4)',
+                        'skeuo-pressed': 'inset 0 4px 8px rgba(0,0,0,0.6), 0 1px 1px rgba(255,255,255,0.2)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #2b2b2b;
+            background-image: radial-gradient(circle at center, #3a3a3a 0%, #1a1a1a 100%);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        .telegraph-btn {
+            transition: all 0.05s ease;
+            background: linear-gradient(to bottom, #d4af37, #aa8529);
+            border: 2px solid #8c6a1c;
+        }
+        .telegraph-btn:active, .telegraph-btn.active {
+            transform: translateY(4px);
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), 0 1px 1px rgba(255,255,255,0.2);
+            background: linear-gradient(to bottom, #aa8529, #8c6a1c);
+        }
+
+        /* Tree Styles */
+        .tree-container {
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            padding: 2rem 0;
+            position: relative;
+        }
+
+        svg#morse-tree {
+            max-width: 100%;
+            height: auto;
+            min-width: 600px;
+        }
+
+        .node-circle {
+            fill: #374151; /* Gray-700 */
+            stroke: #9ca3af; /* Gray-400 */
+            stroke-width: 2;
+            transition: all 0.3s ease;
+        }
+        
+        .node-text {
+            fill: #f3f4f6; /* Gray-100 */
+            font-family: 'Inter', sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+        }
+
+        .link-line {
+            stroke: #4b5563; /* Gray-600 */
+            stroke-width: 3;
+            transition: stroke 0.3s ease, stroke-width 0.3s ease;
+        }
+
+        .link-label {
+            fill: #9ca3af;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Active states for the tree */
+        .node-circle.active {
+            fill: #fbbf24; /* Amber-400 */
+            stroke: #f59e0b;
+            filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.8));
+        }
+        .node-text.active {
+            fill: #111827; /* Gray-900 */
+        }
+        .link-line.active {
+            stroke: #fbbf24;
+            stroke-width: 5;
+            filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.5));
+        }
+        
+        .link-line.dit-link { stroke-dasharray: 4, 4; }
+        
+        /* Typed Text Area */
+        .ticker-tape {
+            background-color: #fcf8e3;
+            background-image: repeating-linear-gradient(transparent, transparent 24px, #e5e0c8 24px, #e5e0c8 25px);
+            line-height: 25px;
+            padding: 4px 12px;
+            color: #1a1a1a;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .pulse-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .setting-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9ca3af;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+        }
+        .modal.show { display: flex; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased text-gray-200">
+
+    <header class="bg-gray-900 border-b border-gray-800 p-4 shadow-md">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-satellite-dish text-yellow-500 text-2xl"></i>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wider uppercase text-gray-100">Telegraph<span class="text-yellow-500 font-light">Decoder</span></h1>
+            </div>
+            <button onclick="toggleSettings()" class="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-800">
+                <i class="fa-solid fa-gear text-xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col max-w-6xl w-full mx-auto p-4 md:p-6 gap-6">
+        
+        <!-- Top Section: Decoded Output & Current Buffer -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Output Area -->
+            <div class="lg:col-span-2 bg-gray-800 rounded-xl p-5 border border-gray-700 shadow-lg flex flex-col relative overflow-hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm uppercase tracking-wider text-gray-400 font-semibold"><i class="fa-solid fa-print mr-2"></i>Decoded Message</h2>
+                    <button onclick="clearOutput()" class="text-xs bg-red-900/50 hover:bg-red-800 text-red-200 px-3 py-1 rounded transition-colors border border-red-700/50">
+                        <i class="fa-solid fa-trash mr-1"></i> Clear
+                    </button>
+                </div>
+                
+                <div class="ticker-tape flex-grow rounded min-h-[120px] font-mono text-xl whitespace-pre-wrap break-words overflow-y-auto relative" id="decoded-output"></div>
+                
+                <div class="mt-4 flex items-center justify-between bg-gray-900 p-3 rounded-lg border border-gray-700">
+                    <div class="flex flex-col">
+                        <span class="text-xs text-gray-500 uppercase tracking-widest mb-1">Current Sequence</span>
+                        <div class="font-mono text-2xl tracking-widest text-yellow-400 h-8 flex items-center" id="current-buffer"></div>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <span class="text-xs text-gray-500 uppercase tracking-widest mb-1">Status</span>
+                        <div class="flex items-center gap-2">
+                            <span id="status-text" class="text-sm text-gray-400">Waiting...</span>
+                            <div id="status-indicator" class="w-3 h-3 rounded-full bg-gray-600"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Area -->
+            <div class="bg-gray-800 rounded-xl p-5 border border-gray-700 shadow-lg flex flex-col justify-between">
+                <div>
+                    <h2 class="text-sm uppercase tracking-wider text-gray-400 font-semibold mb-4"><i class="fa-solid fa-sliders mr-2"></i>Input Mode</h2>
+                    
+                    <div class="flex bg-gray-900 rounded-lg p-1 border border-gray-700 mb-6">
+                        <button id="mode-single" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors bg-gray-700 text-white shadow" onclick="setMode('single')">
+                            Single Key
+                        </button>
+                        <button id="mode-dual" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors text-gray-400 hover:text-white" onclick="setMode('dual')">
+                            Two Keys
+                        </button>
+                    </div>
+
+                    <div id="instruction-single" class="text-sm text-gray-300 bg-gray-900/50 p-4 rounded-lg border border-gray-700/50 mb-4">
+                        <p class="mb-2"><strong class="text-yellow-500">Mode: Single Key (Spacebar)</strong></p>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                            <li>Short press = <strong class="text-white">Dit (·)</strong></li>
+                            <li>Long press = <strong class="text-white">Dah (-)</strong></li>
+                            <li>Pause to complete character</li>
+                            <li>Longer pause for space/newline</li>
+                        </ul>
+                    </div>
+
+                    <div id="instruction-dual" class="text-sm text-gray-300 bg-gray-900/50 p-4 rounded-lg border border-gray-700/50 mb-4 hidden">
+                        <p class="mb-2"><strong class="text-yellow-500">Mode: Two Keys</strong></p>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                            <li>Press <strong class="text-white bg-gray-700 px-2 rounded">J</strong> or <strong class="text-white bg-gray-700 px-2 rounded">Left Arrow</strong> for <strong class="text-white">Dit (·)</strong></li>
+                            <li>Press <strong class="text-white bg-gray-700 px-2 rounded">K</strong> or <strong class="text-white bg-gray-700 px-2 rounded">Right Arrow</strong> for <strong class="text-white">Dah (-)</strong></li>
+                            <li>Pause to complete character/word</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- On-screen Telegraph Key -->
+                <div class="mt-4 flex flex-col items-center">
+                    <button id="telegraph-key" class="telegraph-btn shadow-skeuo w-full h-24 rounded-xl flex flex-col items-center justify-center gap-2 select-none touch-none">
+                        <div class="w-12 h-12 rounded-full bg-yellow-900/40 border-2 border-yellow-700/50 flex items-center justify-center shadow-inner">
+                            <div class="w-8 h-8 rounded-full bg-yellow-900/80 border border-yellow-800"></div>
+                        </div>
+                        <span class="text-yellow-900 font-bold uppercase tracking-widest text-xs opacity-75 pointer-events-none">Tap Here</span>
+                    </button>
+                    
+                    <div id="dual-keys-container" class="w-full flex gap-4 hidden mt-2">
+                        <button id="btn-dit" class="telegraph-btn shadow-skeuo flex-1 h-20 rounded-xl flex items-center justify-center text-yellow-900 font-bold text-xl select-none touch-none">
+                            · (Dit)
+                        </button>
+                        <button id="btn-dah" class="telegraph-btn shadow-skeuo flex-1 h-20 rounded-xl flex items-center justify-center text-yellow-900 font-bold text-xl select-none touch-none">
+                            - (Dah)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Tree Section -->
+        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700 shadow-lg flex-grow flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-sm uppercase tracking-wider text-gray-400 font-semibold">
+                    <i class="fa-solid fa-network-wired mr-2"></i>Decoding Path
+                </h2>
+                <div class="flex items-center gap-4 text-xs text-gray-400">
+                    <span class="flex items-center"><span class="w-4 border-t-2 border-dashed border-gray-500 mr-1 inline-block"></span> Dit (·)</span>
+                    <span class="flex items-center"><span class="w-4 border-t-2 border-solid border-gray-500 mr-1 inline-block"></span> Dah (-)</span>
+                </div>
+            </div>
+            
+            <div class="bg-gray-900 rounded-lg border border-gray-700 flex-grow relative overflow-hidden" id="tree-wrapper">
+                <div class="tree-container h-full w-full absolute inset-0 cursor-grab active:cursor-grabbing" id="pan-container">
+                    <!-- SVG Tree will be generated here by JS -->
+                    <svg id="morse-tree" width="1000" height="600" xmlns="http://www.w3.org/2000/svg">
+                        <g id="tree-links"></g>
+                        <g id="tree-nodes"></g>
+                    </svg>
+                </div>
+                <!-- Zoom controls -->
+                <div class="absolute bottom-4 right-4 flex flex-col gap-2 bg-gray-800/80 p-2 rounded-lg backdrop-blur-sm border border-gray-700">
+                    <button onclick="zoomTree(1.2)" class="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-white"><i class="fa-solid fa-plus"></i></button>
+                    <button onclick="resetZoom()" class="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-expand"></i></button>
+                    <button onclick="zoomTree(0.8)" class="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-white"><i class="fa-solid fa-minus"></i></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal justify-center items-center">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl p-6 max-w-md w-full mx-4 relative">
+            <button onclick="toggleSettings()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h2 class="text-xl font-bold mb-6 text-white border-b border-gray-700 pb-2"><i class="fa-solid fa-gear mr-2"></i> Timing & Sound Settings</h2>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="setting-label">Sound Options</label>
+                    <div class="flex items-center justify-between bg-gray-900 p-3 rounded-lg border border-gray-700">
+                        <span class="text-sm">Enable Sound (Click + Beep)</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="sound-toggle" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="setting-label">Base Time Unit (Dit length)</label>
+                        <span id="unit-val" class="text-xs text-yellow-500 font-mono">150ms</span>
+                    </div>
+                    <input type="range" id="base-unit-slider" min="50" max="400" value="150" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                    <p class="text-xs text-gray-500 mt-1">Adjusts speed. Faster (left) vs Slower (right).</p>
+                </div>
+                
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                    <label class="setting-label mb-2">Calculated Thresholds</label>
+                    <div class="grid grid-cols-2 gap-2 text-sm font-mono text-gray-300">
+                        <div class="flex justify-between"><span>Dah Length (>):</span> <span id="th-dah" class="text-yellow-400">150ms</span></div>
+                        <div class="flex justify-between"><span>Char Gap (>):</span> <span id="th-char" class="text-yellow-400">450ms</span></div>
+                        <div class="flex justify-between"><span>Word Gap (>):</span> <span id="th-word" class="text-yellow-400">1050ms</span></div>
+                        <div class="flex justify-between"><span>Line Gap (>):</span> <span id="th-line" class="text-yellow-400">2100ms</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+                <button onclick="toggleSettings()" class="bg-yellow-600 hover:bg-yellow-500 text-white font-medium py-2 px-6 rounded transition-colors">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Core Data: Morse Code Tree Structure ---
+        // Based roughly on the provided image chart structure.
+        // Left is Dit (.), Right is Dah (-)
+        const morseTree = {
+            id: 'START', val: 'Start', level: 0,
+            left: {
+                id: 'E', val: 'E', seq: '.', level: 1,
+                left: {
+                    id: 'I', val: 'I', seq: '..', level: 2,
+                    left: {
+                        id: 'S', val: 'S', seq: '...', level: 3,
+                        left: { id: 'H', val: 'H', seq: '....', level: 4 },
+                        right: { id: 'V', val: 'V', seq: '...-', level: 4 }
+                    },
+                    right: {
+                        id: 'U', val: 'U', seq: '..-', level: 3,
+                        left: { id: 'F', val: 'F', seq: '..-.', level: 4 },
+                        // Note: Added missing node from standard morse for completeness if user types it, 
+                        // though it might not be explicitly in the simplified chart drawing.
+                        right: { id: '2', val: '2', seq: '..---', level: 4, hidden: true } // just for completeness logic
+                    }
+                },
+                right: {
+                    id: 'A', val: 'A', seq: '.-', level: 2,
+                    left: {
+                        id: 'R', val: 'R', seq: '.-.', level: 3,
+                        left: { id: 'L', val: 'L', seq: '.-..', level: 4 },
+                        // right: { val: '+', seq: '.-.-' }
+                    },
+                    right: {
+                        id: 'W', val: 'W', seq: '.--', level: 3,
+                        left: { id: 'P', val: 'P', seq: '.--.', level: 4 },
+                        right: { id: 'J', val: 'J', seq: '.---', level: 4 }
+                    }
+                }
+            },
+            right: {
+                id: 'T', val: 'T', seq: '-', level: 1,
+                left: {
+                    id: 'N', val: 'N', seq: '-.', level: 2,
+                    left: {
+                        id: 'D', val: 'D', seq: '-..', level: 3,
+                        left: { id: 'B', val: 'B', seq: '-...', level: 4 },
+                        right: { id: 'X', val: 'X', seq: '-..-', level: 4 }
+                    },
+                    right: {
+                        id: 'K', val: 'K', seq: '-.-', level: 3,
+                        left: { id: 'C', val: 'C', seq: '-.-.', level: 4 },
+                        right: { id: 'Y', val: 'Y', seq: '-.--', level: 4 }
+                    }
+                },
+                right: {
+                    id: 'M', val: 'M', seq: '--', level: 2,
+                    left: {
+                        id: 'G', val: 'G', seq: '--.', level: 3,
+                        left: { id: 'Z', val: 'Z', seq: '--..', level: 4 },
+                        right: { id: 'Q', val: 'Q', seq: '--.-', level: 4 }
+                    },
+                    right: {
+                        id: 'O', val: 'O', seq: '---', level: 3,
+                        // Not in simple chart, but good to have
+                        left: { id: '8', val: '8', seq: '---.', level: 4, hidden: true },
+                        right: { id: '9', val: '9', seq: '----', level: 4, hidden: true }
+                    }
+                }
+            }
+        };
+
+        // Flat dictionary for quick lookup
+        const morseDict = {};
+        function buildDict(node) {
+            if (!node) return;
+            if (node.seq) morseDict[node.seq] = node.val;
+            buildDict(node.left);
+            buildDict(node.right);
+        }
+        buildDict(morseTree);
+        
+        // Add numbers and punctuation manually for completeness in decoding
+        const extras = {
+            '-----': '0', '.----': '1', '..---': '2', '...--': '3', '....-': '4', 
+            '.....': '5', '-....': '6', '--...': '7', '---..': '8', '----.': '9',
+            '.-.-.-': '.', '--..--': ',', '..--..': '?', '-.-.--': '!', '-....-': '-',
+            '-..-.': '/', '.--.-.': '@', '-.--.': '(', '-.--.-': ')'
+        };
+        Object.assign(morseDict, extras);
+
+        // --- State Variables ---
+        let currentMode = 'single'; // 'single' or 'dual'
+        let isKeyDown = false;
+        let keyDownTime = 0;
+        let keyUpTime = 0;
+        
+        let currentBuffer = ""; // Accumulates . and -
+        let decodedText = "";
+        
+        let charTimer = null;
+        let wordTimer = null;
+        let lineTimer = null;
+
+        // Timing configurations (in ms)
+        let BASE_UNIT = 150; // length of a dit
+        // Derived thresholds
+        let THRESHOLD_DAH = BASE_UNIT; // > 1 unit is a dah
+        let THRESHOLD_CHAR = BASE_UNIT * 3; // Gap between parts of same letter is 1 unit. Gap between letters is 3 units.
+        let THRESHOLD_WORD = BASE_UNIT * 7; // Gap between words is 7 units.
+        let THRESHOLD_LINE = BASE_UNIT * 14; // Custom: very long gap for new line.
+
+        // --- Audio Context (Web Audio API) ---
+        let audioCtx = null;
+        let oscillator = null;
+        let gainNode = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Master gain
+                gainNode = audioCtx.createGain();
+                gainNode.gain.value = 0;
+                gainNode.connect(audioCtx.destination);
+                
+                // Oscillator (the Beep)
+                oscillator = audioCtx.createOscillator();
+                oscillator.type = 'sine'; // classic beep
+                oscillator.frequency.value = 600; // Hz
+                oscillator.connect(gainNode);
+                oscillator.start();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playClackSound() {
+            if (!soundEnabled || !audioCtx) return;
+            // Synthesize a short "click/clack" sound simulating the metal contact
+            const clickOsc = audioCtx.createOscillator();
+            const clickGain = audioCtx.createGain();
+            
+            clickOsc.type = 'square';
+            clickOsc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            clickOsc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            
+            clickGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            clickGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            
+            clickOsc.connect(clickGain);
+            clickGain.connect(audioCtx.destination);
+            
+            clickOsc.start();
+            clickOsc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function startTone() {
+            if (!soundEnabled) return;
+            initAudio();
+            playClackSound(); // Initial strike
+            // Small delay to simulate the mechanical strike before the tone
+            setTimeout(() => {
+                if (isKeyDown && gainNode) {
+                    gainNode.gain.setTargetAtTime(0.5, audioCtx.currentTime, 0.01);
+                }
+            }, 10);
+        }
+
+        function stopTone() {
+            if (!soundEnabled || !gainNode) return;
+            gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.01);
+            playClackSound(); // Release clack
+        }
+
+        // --- Visual Tree Generation (D3 style but vanilla JS) ---
+        let zoomLevel = 1;
+        let panX = 0, panY = 0;
+        let isPanning = false, startPanX, startPanY;
+        const svgTree = document.getElementById('morse-tree');
+        const treeNodesGroup = document.getElementById('tree-nodes');
+        const treeLinksGroup = document.getElementById('tree-links');
+        
+        // Layout config
+        const NODE_RADIUS = 16;
+        const LEVEL_HEIGHT = 80;
+        const SIBLING_SEP = 40;
+
+        // Calculate positions recursively
+        function calculateTreePositions(node, x, y, bounds = {minX: 0, maxX: 0}, offset = 300) {
+            if (!node) return;
+            
+            node.x = x;
+            node.y = y;
+            
+            bounds.minX = Math.min(bounds.minX, x);
+            bounds.maxX = Math.max(bounds.maxX, x);
+
+            // The deeper the level, the smaller the horizontal spread needed
+            let currentOffset = offset / Math.pow(1.8, node.level);
+
+            if (node.left) calculateTreePositions(node.left, x - currentOffset, y + LEVEL_HEIGHT, bounds, offset);
+            if (node.right) calculateTreePositions(node.right, x + currentOffset, y + LEVEL_HEIGHT, bounds, offset);
+        }
+
+        function drawTree() {
+            treeNodesGroup.innerHTML = '';
+            treeLinksGroup.innerHTML = '';
+            
+            // Set root position roughly center top
+            const rootX = 500;
+            const rootY = 40;
+            let bounds = {minX: rootX, maxX: rootX};
+            
+            calculateTreePositions(morseTree, rootX, rootY, bounds, 300);
+
+            // Adjust SVG size if tree grows too wide (though fixed for initial state)
+            const requiredWidth = bounds.maxX - bounds.minX + 100;
+            // svgTree.setAttribute('width', Math.max(1000, requiredWidth));
+            
+            // Render Links
+            function renderLinks(node) {
+                if (!node) return;
+                
+                if (node.left && !node.left.hidden) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', node.x);
+                    line.setAttribute('y1', node.y);
+                    line.setAttribute('x2', node.left.x);
+                    line.setAttribute('y2', node.left.y);
+                    line.setAttribute('class', 'link-line dit-link');
+                    line.setAttribute('id', `link-${node.id}-${node.left.id}`);
+                    treeLinksGroup.appendChild(line);
+                    renderLinks(node.left);
+                }
+                if (node.right && !node.right.hidden) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', node.x);
+                    line.setAttribute('y1', node.y);
+                    line.setAttribute('x2', node.right.x);
+                    line.setAttribute('y2', node.right.y);
+                    line.setAttribute('class', 'link-line dah-link');
+                    line.setAttribute('id', `link-${node.id}-${node.right.id}`);
+                    treeLinksGroup.appendChild(line);
+                    renderLinks(node.right);
+                }
+            }
+
+            // Render Nodes
+            function renderNodes(node) {
+                if (!node || node.hidden) return;
+                
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'node-group');
+                g.setAttribute('id', `node-${node.id}`);
+                
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', node.x);
+                circle.setAttribute('cy', node.y);
+                circle.setAttribute('r', node.id === 'START' ? NODE_RADIUS * 1.5 : NODE_RADIUS);
+                circle.setAttribute('class', 'node-circle');
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', node.x);
+                text.setAttribute('y', node.y);
+                text.setAttribute('class', 'node-text');
+                text.textContent = node.id === 'START' ? 'S' : node.val;
+
+                g.appendChild(circle);
+                g.appendChild(text);
+                treeNodesGroup.appendChild(g);
+
+                renderNodes(node.left);
+                renderNodes(node.right);
+            }
+
+            renderLinks(morseTree);
+            renderNodes(morseTree);
+            
+            // Highlight root initially
+            highlightTreePath("");
+        }
+
+        // Apply pan and zoom
+        function applyTransform() {
+            const transformStr = `translate(${panX}, ${panY}) scale(${zoomLevel})`;
+            treeLinksGroup.setAttribute('transform', transformStr);
+            treeNodesGroup.setAttribute('transform', transformStr);
+        }
+
+        function zoomTree(factor) {
+            zoomLevel *= factor;
+            // Clamp zoom
+            zoomLevel = Math.max(0.5, Math.min(zoomLevel, 3));
+            applyTransform();
+        }
+        function resetZoom() {
+            zoomLevel = 1;
+            panX = 0;
+            panY = 0;
+            applyTransform();
+        }
+
+        // Panning logic
+        const panContainer = document.getElementById('pan-container');
+        panContainer.addEventListener('mousedown', (e) => {
+            // Only pan if clicking on background, not buttons
+            if(e.target.tagName !== 'svg' && e.target.tagName !== 'g' && e.target.id === 'pan-container') {
+                isPanning = true;
+                startPanX = e.clientX - panX;
+                startPanY = e.clientY - panY;
+            }
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            panX = e.clientX - startPanX;
+            panY = e.clientY - startPanY;
+            applyTransform();
+        });
+        window.addEventListener('mouseup', () => { isPanning = false; });
+        window.addEventListener('mouseleave', () => { isPanning = false; });
+
+
+        // Highlight the path based on current buffer
+        function highlightTreePath(seq) {
+            // Reset all
+            document.querySelectorAll('.node-circle').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.node-text').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.link-line').forEach(el => el.classList.remove('active'));
+
+            let currentNode = morseTree;
+            let pathIds = [currentNode.id];
+            
+            // Highlight root
+            document.querySelector(`#node-${currentNode.id} .node-circle`)?.classList.add('active');
+            document.querySelector(`#node-${currentNode.id} .node-text`)?.classList.add('active');
+
+            if (seq.length > 0) {
+                for (let i = 0; i < seq.length; i++) {
+                    const char = seq[i];
+                    let nextNode = null;
+                    if (char === '.') nextNode = currentNode.left;
+                    if (char === '-') nextNode = currentNode.right;
+
+                    if (nextNode && !nextNode.hidden) {
+                        // Highlight link
+                        const linkId = `#link-${currentNode.id}-${nextNode.id}`;
+                        document.querySelector(linkId)?.classList.add('active');
+                        
+                        // Highlight node
+                        document.querySelector(`#node-${nextNode.id} .node-circle`)?.classList.add('active');
+                        document.querySelector(`#node-${nextNode.id} .node-text`)?.classList.add('active');
+                        
+                        currentNode = nextNode;
+                    } else {
+                        // Path broken (invalid sequence for visual tree)
+                        break;
+                    }
+                }
+            }
+        }
+
+        // --- Logic: Morse Code Processing ---
+        const uiBuffer = document.getElementById('current-buffer');
+        const uiOutput = document.getElementById('decoded-output');
+        const uiStatusText = document.getElementById('status-text');
+        const uiStatusInd = document.getElementById('status-indicator');
+
+        function updateUIStatus(text, colorClass) {
+            uiStatusText.textContent = text;
+            uiStatusInd.className = `w-3 h-3 rounded-full ${colorClass}`;
+        }
+
+        function appendToBuffer(symbol) {
+            currentBuffer += symbol;
+            uiBuffer.textContent = currentBuffer;
+            highlightTreePath(currentBuffer);
+            updateUIStatus('Typing...', 'bg-yellow-500 animate-pulse');
+        }
+
+        function processCharacter() {
+            if (currentBuffer === "") return;
+            
+            let char = morseDict[currentBuffer];
+            if (char) {
+                decodedText += char;
+            } else {
+                decodedText += "?"; // Unknown sequence
+            }
+            
+            currentBuffer = "";
+            uiBuffer.textContent = "";
+            highlightTreePath("");
+            updateOutput();
+            updateUIStatus('Character Decoded', 'bg-green-500');
+        }
+
+        function processSpace() {
+            // Avoid multiple spaces
+            if (decodedText.length > 0 && !decodedText.endsWith(" ") && !decodedText.endsWith("\n")) {
+                decodedText += " ";
+                updateOutput();
+                updateUIStatus('Word Space', 'bg-blue-500');
+            }
+        }
+        
+        function processNewLine() {
+            if (decodedText.length > 0 && !decodedText.endsWith("\n")) {
+                decodedText += "\n";
+                updateOutput();
+                updateUIStatus('New Line', 'bg-purple-500');
+            }
+        }
+
+        function updateOutput() {
+            uiOutput.textContent = decodedText;
+            uiOutput.scrollTop = uiOutput.scrollHeight;
+        }
+
+        function clearOutput() {
+            decodedText = "";
+            currentBuffer = "";
+            uiBuffer.textContent = "";
+            updateOutput();
+            highlightTreePath("");
+            updateUIStatus('Waiting...', 'bg-gray-600');
+        }
+
+        function resetTimers() {
+            clearTimeout(charTimer);
+            clearTimeout(wordTimer);
+            clearTimeout(lineTimer);
+        }
+
+        function startTimers() {
+            resetTimers();
+            
+            // Timer for Character Completion
+            charTimer = setTimeout(() => {
+                if (currentBuffer !== "") {
+                    processCharacter();
+                }
+            }, THRESHOLD_CHAR);
+
+            // Timer for Space Completion (Words)
+            wordTimer = setTimeout(() => {
+                processSpace();
+            }, THRESHOLD_WORD);
+            
+            // Timer for New Line
+            lineTimer = setTimeout(() => {
+                processNewLine();
+                updateUIStatus('Waiting...', 'bg-gray-600');
+            }, THRESHOLD_LINE);
+        }
+
+        // --- Input Handling: Mouse/Touch & Keyboard ---
+        
+        // Single Key Logic
+        function handleKeyDown() {
+            if (isKeyDown) return; // Ignore auto-repeat
+            isKeyDown = true;
+            keyDownTime = performance.now();
+            
+            resetTimers();
+            startTone();
+            
+            // Visual feedback
+            if(currentMode === 'single'){
+                document.getElementById('telegraph-key').classList.add('active');
+            }
+            updateUIStatus('Key Down', 'bg-red-500');
+        }
+
+        function handleKeyUp() {
+            if (!isKeyDown) return;
+            isKeyDown = false;
+            keyUpTime = performance.now();
+            
+            stopTone();
+            if(currentMode === 'single'){
+                document.getElementById('telegraph-key').classList.remove('active');
+            }
+
+            // Calculate duration to determine Dit or Dah
+            if (currentMode === 'single') {
+                const duration = keyUpTime - keyDownTime;
+                if (duration > THRESHOLD_DAH) {
+                    appendToBuffer("-");
+                } else {
+                    appendToBuffer(".");
+                }
+            }
+            
+            // Start waiting for next symbol or space
+            startTimers();
+        }
+        
+        // Dual Key Explicit logic
+        function handleExplicitInput(symbol) {
+            initAudio();
+            playClackSound();
+            resetTimers();
+            appendToBuffer(symbol);
+            startTimers();
+            
+            // Visual flash for button
+            const btn = symbol === '.' ? document.getElementById('btn-dit') : document.getElementById('btn-dah');
+            if(btn) {
+                btn.classList.add('active');
+                setTimeout(() => btn.classList.remove('active'), 100);
+            }
+        }
+
+        // Keyboard Listeners
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return; // Ignore if typing in settings
+            
+            // Prevent default scrolling for space and arrows
+            if(['Space', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+                e.preventDefault();
+            }
+
+            if (currentMode === 'single') {
+                // Any key acts as the telegraph key in single mode
+                handleKeyDown();
+            } else if (currentMode === 'dual') {
+                if (!isKeyDown) { // Prevent repeat triggering
+                    if (e.key === 'j' || e.key === 'J' || e.code === 'ArrowLeft') {
+                        handleExplicitInput('.');
+                        isKeyDown = true;
+                    } else if (e.key === 'k' || e.key === 'K' || e.code === 'ArrowRight') {
+                        handleExplicitInput('-');
+                        isKeyDown = true;
+                    }
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (currentMode === 'single') {
+                handleKeyUp();
+            } else if (currentMode === 'dual') {
+                isKeyDown = false;
+            }
+        });
+
+        // Mouse/Touch Listeners for On-Screen Buttons
+        const mainKey = document.getElementById('telegraph-key');
+        mainKey.addEventListener('mousedown', handleKeyDown);
+        mainKey.addEventListener('mouseup', handleKeyUp);
+        mainKey.addEventListener('mouseleave', handleKeyUp);
+        
+        mainKey.addEventListener('touchstart', (e) => { e.preventDefault(); handleKeyDown(); }, {passive: false});
+        mainKey.addEventListener('touchend', (e) => { e.preventDefault(); handleKeyUp(); }, {passive: false});
+
+        // Dual Mode Buttons
+        document.getElementById('btn-dit').addEventListener('mousedown', () => handleExplicitInput('.'));
+        document.getElementById('btn-dah').addEventListener('mousedown', () => handleExplicitInput('-'));
+        document.getElementById('btn-dit').addEventListener('touchstart', (e) => { e.preventDefault(); handleExplicitInput('.'); }, {passive: false});
+        document.getElementById('btn-dah').addEventListener('touchstart', (e) => { e.preventDefault(); handleExplicitInput('-'); }, {passive: false});
+
+        // --- UI Interactions & Settings ---
+        function setMode(mode) {
+            currentMode = mode;
+            const btnSingle = document.getElementById('mode-single');
+            const btnDual = document.getElementById('mode-dual');
+            const instSingle = document.getElementById('instruction-single');
+            const instDual = document.getElementById('instruction-dual');
+            const keySingle = document.getElementById('telegraph-key');
+            const keyDual = document.getElementById('dual-keys-container');
+
+            if (mode === 'single') {
+                btnSingle.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors bg-gray-700 text-white shadow';
+                btnDual.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors text-gray-400 hover:text-white';
+                instSingle.classList.remove('hidden');
+                instDual.classList.add('hidden');
+                keySingle.classList.remove('hidden');
+                keyDual.classList.add('hidden');
+            } else {
+                btnDual.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors bg-gray-700 text-white shadow';
+                btnSingle.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors text-gray-400 hover:text-white';
+                instDual.classList.remove('hidden');
+                instSingle.classList.add('hidden');
+                keySingle.classList.add('hidden');
+                keyDual.classList.remove('hidden');
+                keyDual.classList.add('flex');
+            }
+            
+            // Clear current buffer on mode switch
+            currentBuffer = "";
+            uiBuffer.textContent = "";
+            highlightTreePath("");
+            resetTimers();
+            updateUIStatus('Mode Changed', 'bg-gray-600');
+        }
+
+        const modal = document.getElementById('settings-modal');
+        function toggleSettings() {
+            if (modal.classList.contains('show')) {
+                modal.classList.remove('show');
+            } else {
+                modal.classList.add('show');
+            }
+        }
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                toggleSettings();
+            }
+        });
+
+        // Settings updates
+        const slider = document.getElementById('base-unit-slider');
+        const unitVal = document.getElementById('unit-val');
+        const soundToggle = document.getElementById('sound-toggle');
+
+        function updateThresholds() {
+            THRESHOLD_DAH = BASE_UNIT;
+            THRESHOLD_CHAR = BASE_UNIT * 3;
+            THRESHOLD_WORD = BASE_UNIT * 7;
+            THRESHOLD_LINE = BASE_UNIT * 14;
+
+            document.getElementById('th-dah').textContent = `${THRESHOLD_DAH}ms`;
+            document.getElementById('th-char').textContent = `${THRESHOLD_CHAR}ms`;
+            document.getElementById('th-word').textContent = `${THRESHOLD_WORD}ms`;
+            document.getElementById('th-line').textContent = `${THRESHOLD_LINE}ms`;
+        }
+
+        slider.addEventListener('input', (e) => {
+            BASE_UNIT = parseInt(e.target.value);
+            unitVal.textContent = `${BASE_UNIT}ms`;
+            updateThresholds();
+        });
+
+        soundToggle.addEventListener('change', (e) => {
+            soundEnabled = e.target.checked;
+        });
+
+        // Initialize
+        window.onload = () => {
+            drawTree();
+            updateThresholds();
+            
+            // Allow audio context init on first body click anywhere
+            document.body.addEventListener('click', initAudio, { once: true });
+            document.body.addEventListener('touchstart', initAudio, { once: true });
+        };
+        
+        // Handle window resize for SVG
+        window.addEventListener('resize', () => {
+            // Re-center logic could go here if needed, but flexbox handles most of it.
+        });
+
+    </script>
+</body>
+</html>

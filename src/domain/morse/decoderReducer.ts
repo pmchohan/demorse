@@ -1,4 +1,10 @@
-import { characterForMorse, symbolsToMorse, type MorseSymbol } from './morseAlphabet'
+import {
+  characterForCode,
+  symbolsToMorse,
+  LETTERS_ONLY,
+  type AlphabetSelection,
+  type MorseSymbol,
+} from './morseAlphabet'
 import {
   classifyGap,
   classifyPress,
@@ -74,13 +80,13 @@ function noticeForPress(classification: PressClassification): DecoderNotice | nu
  * Commits the character currently held in `symbols`. Returns the same state
  * object when there is nothing pending, so callers can compare identity.
  */
-function commitPendingLetter(state: DecoderState): DecoderState {
+function commitPendingLetter(state: DecoderState, selection: AlphabetSelection): DecoderState {
   if (state.symbols.length === 0) {
     return state
   }
 
   const morse = symbolsToMorse(state.symbols)
-  const character = characterForMorse(morse)
+  const character = characterForCode(morse, selection)
 
   if (!character) {
     return {
@@ -89,7 +95,7 @@ function commitPendingLetter(state: DecoderState): DecoderState {
       commitCount: state.commitCount + 1,
       notice: {
         kind: 'unresolved-sequence',
-        message: `${morse} is not a letter on the decoding chart — nothing was appended.`,
+        message: `${morse} is not a character the chart can resolve — nothing was appended.`,
       },
     }
   }
@@ -104,16 +110,23 @@ function commitPendingLetter(state: DecoderState): DecoderState {
   }
 }
 
-function closeWord(state: DecoderState): DecoderState {
-  const committed = commitPendingLetter(state)
-  const text = committed.text
+/** Appends a separator, collapsing any pending letter and never doubling up whitespace. */
+function appendSeparator(
+  state: DecoderState,
+  selection: AlphabetSelection,
+  separator: ' ' | '\n',
+): DecoderState {
+  const committed = commitPendingLetter(state, selection)
+  const trimmed = separator === '\n' ? committed.text.replace(/ +$/, '') : committed.text
+  const isBlank = trimmed === ''
+  const alreadySeparated = separator === ' ' ? committed.text.endsWith(' ') : trimmed.endsWith('\n')
 
   return {
     ...committed,
     phase: 'idle',
     pressStartedAtMs: null,
     symbols: [],
-    text: text === '' || text.endsWith(' ') ? text : `${text} `,
+    text: isBlank || alreadySeparated ? trimmed : `${trimmed}${separator}`,
   }
 }
 
@@ -123,6 +136,7 @@ function closeWord(state: DecoderState): DecoderState {
  */
 export function createDecoderReducer(
   thresholds: MorseTimingThresholds,
+  selection: AlphabetSelection = LETTERS_ONLY,
 ): (state: DecoderState, action: DecoderAction) => DecoderState {
   return function decoderReducer(state, action) {
     switch (action.type) {
@@ -171,6 +185,20 @@ export function createDecoderReducer(
           liveElapsedMs: 0,
           symbols: [...state.symbols, classification.symbol as MorseSymbol],
           notice: noticeForPress(classification),
+        }
+      }
+
+      case 'symbol': {
+        // Two-key mode: the key that was pressed already names the symbol, so
+        // dwell time is irrelevant — but the press still ends the running pause.
+        return {
+          ...state,
+          phase: 'waiting',
+          pressStartedAtMs: null,
+          releasedAtMs: action.atMs,
+          liveElapsedMs: 0,
+          symbols: [...state.symbols, action.symbol],
+          notice: null,
         }
       }
 

@@ -9,12 +9,16 @@ export interface MorseTimingThresholds {
   readonly tapMaxMs: number
   readonly holdMinMs: number
   readonly holdMaxMs: number
-  readonly gapMinMs: number
-  readonly gapMaxMs: number
+  /** Silence that finishes the current character. */
+  readonly letterGapMs: number
+  /** Silence that finishes the character and adds a space. */
+  readonly wordGapMs: number
+  /** Silence that finishes the character and starts a new line. */
+  readonly lineGapMs: number
 }
 
 export type PressVerdict = 'dot' | 'dash' | 'too-short'
-export type GapVerdict = 'intra' | 'letter' | 'word'
+export type GapVerdict = 'intra' | 'letter' | 'word' | 'line'
 
 /** `exact` = inside a defined window, `ambiguous` = between windows, `over-max` = past the upper bound. */
 export type TimingConfidence = 'exact' | 'ambiguous' | 'over-max'
@@ -92,36 +96,49 @@ export function classifyPress(
   }
 }
 
+/**
+ * Silence is the only separator the decoder has, so it is read in three tiers:
+ * a character boundary, a word space, then a line break. `letterGapMs` is the
+ * first tier's threshold, `wordGapMs` the second's, `lineGapMs` the third's.
+ */
 export function classifyGap(gapMs: number, thresholds: MorseTimingThresholds): GapClassification {
-  const { gapMinMs, gapMaxMs } = thresholds
+  const { letterGapMs, wordGapMs, lineGapMs } = thresholds
   const gap = Math.max(0, gapMs)
 
-  if (gap < gapMinMs) {
+  if (gap < letterGapMs) {
     return {
       verdict: 'intra',
       confidence: 'exact',
-      note: `${roundMs(gap)}ms of silence — still inside the same character (under ${gapMinMs}ms).`,
+      note: `${roundMs(gap)}ms of silence — still inside the same character (under ${letterGapMs}ms).`,
     }
   }
 
-  if (gap <= gapMaxMs) {
+  if (gap < wordGapMs) {
     return {
       verdict: 'letter',
       confidence: 'exact',
-      note: `${roundMs(gap)}ms of silence — character boundary (${gapMinMs}–${gapMaxMs}ms).`,
+      note: `${roundMs(gap)}ms of silence — character boundary (${letterGapMs}–${wordGapMs}ms).`,
+    }
+  }
+
+  if (gap < lineGapMs) {
+    return {
+      verdict: 'word',
+      confidence: 'exact',
+      note: `${roundMs(gap)}ms of silence — word space (${wordGapMs}–${lineGapMs}ms).`,
     }
   }
 
   return {
-    verdict: 'word',
-    confidence: 'over-max',
-    note: `${roundMs(gap)}ms of silence — word boundary (past ${gapMaxMs}ms).`,
+    verdict: 'line',
+    confidence: 'exact',
+    note: `${roundMs(gap)}ms of silence — line break (past ${lineGapMs}ms).`,
   }
 }
 
 /** Windows that overlap make dot/dash ambiguous by construction — surfaced in the UI. */
 export function findThresholdConflicts(thresholds: MorseTimingThresholds): string[] {
-  const { tapMinMs, tapMaxMs, holdMinMs, holdMaxMs, gapMinMs, gapMaxMs } = thresholds
+  const { tapMinMs, tapMaxMs, holdMinMs, holdMaxMs, letterGapMs, wordGapMs, lineGapMs } = thresholds
   const conflicts: string[] = []
 
   if (tapMinMs > tapMaxMs) {
@@ -136,8 +153,12 @@ export function findThresholdConflicts(thresholds: MorseTimingThresholds): strin
     conflicts.push('The hold minimum is larger than the hold maximum.')
   }
 
-  if (gapMinMs > gapMaxMs) {
-    conflicts.push('The gap minimum is larger than the gap maximum.')
+  if (letterGapMs >= wordGapMs) {
+    conflicts.push('The character gap is not shorter than the word gap — word spaces can never be reached.')
+  }
+
+  if (wordGapMs >= lineGapMs) {
+    conflicts.push('The word gap is not shorter than the line gap — line breaks can never be reached.')
   }
 
   return conflicts
