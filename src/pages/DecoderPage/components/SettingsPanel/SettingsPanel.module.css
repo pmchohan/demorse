@@ -1,0 +1,128 @@
+/* Three tuning groups side by side on wide screens, stacked on narrow ones. */
+.root {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.group {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-label);
+  letter-spacing: var(--letter-spacing-overline);
+  text-transform: uppercase;
+  color: hsl(var(--color-fg-muted));
+}
+
+.selectRow,
+.slider {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.fieldLabel {
+  font-size: var(--font-size-xs);
+  color: hsl(var(--color-fg-muted));
+}
+
+.select {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--color-line) / 0.2);
+  background: hsl(var(--color-bg-raised));
+  color: hsl(var(--color-fg-default));
+  font: inherit;
+  font-size: var(--font-size-sm);
+}
+
+.select:focus-visible {
+  outline: 2px solid hsl(var(--color-brand-500));
+  outline-offset: 2px;
+}
+
+.sliders {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.sliderHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.sliderValue {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: hsl(var(--color-brand-400));
+}
+
+.slider input[type='range'] {
+  width: 100%;
+  accent-color: hsl(var(--color-brand-500));
+}
+
+.slider input[type='range']:disabled {
+  opacity: 0.4;
+}
+
+.blurb {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+  color: hsl(var(--color-fg-subtle));
+}
+
+.conflicts {
+  margin: 0;
+  padding-left: var(--space-4);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+  color: hsl(var(--color-warning-500));
+}
+
+.textButton {
+  justify-self: start;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--color-line) / 0.2);
+  background: transparent;
+  color: hsl(var(--color-fg-default));
+  font: inherit;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out-expo);
+}
+
+.textButton:hover:not(:disabled) {
+  border-color: hsl(var(--color-brand-500) / 0.5);
+}
+
+.textButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.textButton:focus-visible {
+  outline: 2px solid hsl(var(--color-brand-500));
+  outline-offset: 2px;
+}
+
+@media (min-width: 64rem) {
+  .root {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.8fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .textButton {
+    transition: none;
+  }
+}

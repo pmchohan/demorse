@@ -1,4 +1,4 @@
-import { MORSE_BY_CHARACTER, type MorseSymbol } from './morseAlphabet'
+import { LETTER_CODE_BY_CHARACTER, type MorseSymbol } from './morseAlphabet'
 
 export interface ChartPoint {
   readonly x: number
@@ -132,7 +132,7 @@ const LETTER_LAYOUT: readonly LetterLayout[] = [
 ]
 
 function morseFor(character: string): string {
-  const morse = MORSE_BY_CHARACTER[character]
+  const morse = LETTER_CODE_BY_CHARACTER[character]
 
   if (!morse) {
     throw new Error(`No Morse sequence for ${character} in the chart layout.`)
@@ -153,7 +153,7 @@ function createStartNode(): MutableNode {
 }
 
 /** Places a dash pill on the last stretch of an edge, flush with the child node. */
-function pillCentre(from: ChartPoint, to: ChartPoint): ChartPoint {
+export function pillCentre(from: ChartPoint, to: ChartPoint): ChartPoint {
   const span = Math.hypot(to.x - from.x, to.y - from.y)
   const back = (PILL_LENGTH / 2) / span
 

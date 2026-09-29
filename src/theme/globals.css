@@ -1,34 +1,45 @@
 /*
  * Single global stylesheet: design tokens + reset only.
  * All component styling lives in co-located CSS modules and consumes these tokens.
+ *
+ * Palette is the telegraph-log look: warm ink, brass/amber signal, and a strip of
+ * paper for the decoded tape. Type is Instrument Serif for display and IBM Plex Mono
+ * everywhere else — the mono face is what makes timing numbers and symbols line up.
  */
 
 :root {
   /* Surfaces and text */
-  --color-bg-app: 196 55% 3%;
-  --color-bg-surface: 196 38% 7%;
-  --color-bg-raised: 196 30% 11%;
-  --color-fg-default: 190 22% 96%;
-  --color-fg-muted: 192 14% 68%;
-  --color-fg-subtle: 194 12% 53%;
-  --color-fg-on-brand: 196 60% 5%;
-  --color-line: 190 42% 72%;
+  --color-bg-app: 36 15% 5%;
+  --color-bg-surface: 34 18% 7%;
+  --color-bg-raised: 36 19% 10%;
+  --color-fg-default: 41 40% 87%;
+  --color-fg-muted: 39 14% 56%;
+  --color-fg-subtle: 40 12% 50%;
+  --color-fg-on-brand: 38 53% 6%;
+  --color-line: 39 16% 22%;
+  --color-line-hairline: 38 13% 15%;
+
+  /* Paper stock for the decoded tape — light in both themes, ink always dark. */
+  --color-paper: 43 52% 86%;
+  --color-paper-edge: 41 34% 72%;
+  --color-paper-ink: 38 39% 10%;
+  --color-paper-muted: 38 22% 42%;
 
   /* Brand + signal accents */
-  --color-brand-500: 178 82% 42%;
-  --color-brand-400: 176 90% 58%;
-  --color-brand-glow: 176 92% 52%;
-  --color-dot-500: 170 88% 54%;
-  --color-dash-500: 198 96% 64%;
-  --color-success-500: 158 76% 48%;
-  --color-warning-500: 38 96% 62%;
-  --color-danger-500: 4 84% 64%;
+  --color-brand-500: 36 74% 56%;
+  --color-brand-400: 40 86% 67%;
+  --color-brand-glow: 40 90% 60%;
+  --color-dot-500: 40 86% 67%;
+  --color-dash-500: 26 58% 56%;
+  --color-success-500: 96 28% 62%;
+  --color-warning-500: 40 86% 67%;
+  --color-danger-500: 14 62% 58%;
 
-  /* Radii */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.5rem;
-  --radius-xl: 2rem;
+  /* Radii — small and mechanical; the instruments this imitates are not rounded. */
+  --radius-sm: 0.3125rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
   --radius-pill: 999px;
 
   /* Spacing scale */
@@ -43,18 +54,21 @@
   --space-9: 6rem;
 
   /* Typography */
-  --font-display: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
-  --font-body: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
+  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.5rem;
-  --font-size-2xl: clamp(1.75rem, 3.4vw, 2.5rem);
-  --font-size-3xl: clamp(2.5rem, 5.4vw, 4.25rem);
-  --letter-spacing-tight: -0.02em;
+  --font-size-2xl: clamp(1.5rem, 3vw, 2rem);
+  --font-size-3xl: clamp(2.25rem, 5vw, 3.25rem);
+  --letter-spacing-tight: -0.01em;
   --letter-spacing-wide: 0.16em;
+  /* The overline: small caps set very wide, used as the section label everywhere. */
+  --letter-spacing-overline: 0.3em;
+  --font-weight-label: 500;
 
   /* Motion — exponential deceleration only; bouncy/elastic curves are banned (impeccable detector). */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -64,38 +78,44 @@
   --duration-base: 320ms;
   --duration-slow: 780ms;
 
-  /* Depth — diffused ambient light, never harsh drop shadows */
-  --shadow-ambient: 0 2rem 4rem -2.5rem hsl(196 60% 1% / 0.9);
-  --shadow-lifted: 0 3rem 6rem -3rem hsl(196 60% 1% / 0.95);
-  --shadow-glow: 0 0 2.5rem hsl(var(--color-brand-glow) / 0.35);
+  /* Depth — the page is flat and ruled; depth comes from hairlines, not shadows. */
+  --shadow-ambient: 0 1.5rem 3rem -2rem hsl(36 40% 2% / 0.85);
+  --shadow-lifted: 0 2rem 4rem -2rem hsl(36 40% 2% / 0.9);
+  --shadow-glow: 0 0 1.75rem hsl(var(--color-brand-glow) / 0.28);
 
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
-  --color-bg-app: 40 34% 97%;
-  --color-bg-surface: 40 40% 99%;
-  --color-bg-raised: 40 28% 94%;
-  --color-fg-default: 197 52% 11%;
-  --color-fg-muted: 197 22% 32%;
-  --color-fg-subtle: 197 18% 38%;
-  /* Dark-only var, but light surfaces also carry brand fills (status dot, theme orb). */
-  --color-fg-on-brand: 0 0% 100%;
-  --color-line: 197 30% 24%;
+  --color-bg-app: 43 42% 91%;
+  --color-bg-surface: 44 52% 96%;
+  --color-bg-raised: 42 36% 88%;
+  --color-fg-default: 38 45% 12%;
+  --color-fg-muted: 35 20% 32%;
+  --color-fg-subtle: 35 16% 38%;
+  --color-fg-on-brand: 44 60% 97%;
+  --color-line: 38 26% 68%;
+  --color-line-hairline: 38 24% 78%;
+
+  /* The tape is the same paper; only its surroundings change. */
+  --color-paper: 44 58% 92%;
+  --color-paper-edge: 40 30% 66%;
+  --color-paper-ink: 38 39% 10%;
+  --color-paper-muted: 38 22% 40%;
 
   /* Light-theme accents are darkened so text on surfaces keeps ≥4.5:1 contrast. */
-  --color-brand-500: 189 74% 26%;
-  --color-brand-400: 188 76% 28%;
-  --color-brand-glow: 188 84% 34%;
-  --color-dot-500: 186 86% 27%;
-  --color-dash-500: 201 90% 32%;
-  --color-success-500: 158 72% 28%;
-  --color-warning-500: 32 92% 36%;
-  --color-danger-500: 2 74% 44%;
+  --color-brand-500: 30 78% 30%;
+  --color-brand-400: 30 80% 33%;
+  --color-brand-glow: 32 82% 40%;
+  --color-dot-500: 30 80% 32%;
+  --color-dash-500: 14 58% 38%;
+  --color-success-500: 98 34% 28%;
+  --color-warning-500: 30 80% 30%;
+  --color-danger-500: 10 62% 38%;
 
-  --shadow-ambient: 0 2rem 4rem -2.5rem hsl(197 30% 40% / 0.35);
-  --shadow-lifted: 0 3rem 6rem -3rem hsl(197 30% 30% / 0.4);
-  --shadow-glow: 0 0 2.5rem hsl(var(--color-brand-glow) / 0.22);
+  --shadow-ambient: 0 1.5rem 3rem -2rem hsl(38 30% 30% / 0.3);
+  --shadow-lifted: 0 2rem 4rem -2rem hsl(38 30% 25% / 0.35);
+  --shadow-glow: 0 0 1.75rem hsl(var(--color-brand-glow) / 0.18);
 
   color-scheme: light;
 }

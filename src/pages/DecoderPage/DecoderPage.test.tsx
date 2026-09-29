@@ -14,10 +14,17 @@ function startClock(startMs?: number): FakeAnimationClock {
 
 afterEach(() => {
   installed.splice(0).forEach((clock) => clock.uninstall())
+  // Settings persist to localStorage, and every test in this file renders the page
+  // again: leave no tuning behind for the next one.
+  window.localStorage.clear()
 })
 
 function transcript(): Element | null {
-  return document.querySelector('p[aria-live="polite"]')
+  // Scoped to the transcript: the gap meter is a live region too, and it sits earlier
+  // in the document.
+  return document.querySelector(
+    'section[aria-labelledby="transcript-title"] p[aria-live="polite"]',
+  )
 }
 
 describe('DecoderPage', () => {
@@ -55,6 +62,27 @@ describe('DecoderPage', () => {
 
     expect(transcript()?.textContent).toContain('Waiting for the first tap')
     expect(screen.getByText('Nothing decoded yet')).toBeInTheDocument()
+  })
+
+  it('keys with two bound keys and keeps a held dash inside one character', () => {
+    const clock = startClock(50_000)
+    render(<DecoderPage />)
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Two keys' }))
+
+    fireEvent.keyDown(window, { code: 'KeyF' })
+    fireEvent.keyUp(window, { code: 'KeyF' })
+
+    fireEvent.keyDown(window, { code: 'KeyJ' })
+    // Well past the letter-gap threshold, but the key is still down: that is the dash
+    // being held, not a pause, so the character must not close under the finger.
+    clock.advance(600)
+    fireEvent.keyUp(window, { code: 'KeyJ' })
+    clock.advance(320)
+
+    expect(transcript()?.textContent).toBe('A')
+    // The choice of input mode is the operator's, so it outlives the page.
+    expect(window.localStorage.getItem('demorse.settings.v1')).toContain('"dual"')
   })
 
   it('lights the chart chain the key presses walk', () => {

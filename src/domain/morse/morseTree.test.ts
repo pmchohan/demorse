@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MORSE_BY_CHARACTER } from './morseAlphabet'
+import { LETTER_CODE_BY_CHARACTER } from './morseAlphabet'
 import {
   CHART_START,
   CHART_VIEW_BOX,
@@ -44,7 +44,7 @@ describe('morseTree', () => {
     expect(morseTree.nodes).toHaveLength(27)
     expect(morseTree.edges).toHaveLength(26)
     expect(morseTree.letters.map((node) => node.character).sort()).toEqual(
-      Object.keys(MORSE_BY_CHARACTER).sort(),
+      Object.keys(LETTER_CODE_BY_CHARACTER).sort(),
     )
   })
 

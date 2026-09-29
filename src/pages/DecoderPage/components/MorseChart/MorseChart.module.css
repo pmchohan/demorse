@@ -1,3 +1,4 @@
+
 .root {
   display: grid;
   gap: var(--space-4);
@@ -339,4 +340,45 @@
   100% {
     transform: scale(1);
   }
+}
+
+/* ---------- Extension charts: digits and punctuation ---------- */
+
+.extension {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding-top: var(--space-5);
+  border-top: 1px solid hsl(var(--color-line-hairline));
+}
+
+.extensionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.extensionTitle {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: hsl(var(--color-fg-muted));
+}
+
+.extensionHint {
+  font-size: var(--font-size-xs);
+  color: hsl(var(--color-fg-subtle));
+}
+
+/* Narrower than the letter chart: these have far fewer leaves and share the same
+   scale, so a smaller cap keeps their marks the size the letters' marks read at. */
+.extensionChart {
+  display: block;
+  width: 100%;
+  min-width: 30rem;
+  max-width: 44rem;
+  margin-inline: auto;
+  height: auto;
 }

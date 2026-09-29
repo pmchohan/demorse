@@ -48,6 +48,14 @@ export interface DecoderState {
 export type DecoderAction =
   | { readonly type: 'press-start'; readonly atMs: number }
   | { readonly type: 'press-end'; readonly atMs: number }
+  /** Two-key mode: the key that was pressed already names the symbol. */
+  | { readonly type: 'symbol'; readonly symbol: MorseSymbol; readonly atMs: number }
+  /**
+   * Two-key mode: a symbol key has been released after being held for
+   * `atMs - startedAtMs`. Holding a dash key is not silence, so the running gap clock
+   * is pushed forward by exactly that much time when the key comes up.
+   */
+  | { readonly type: 'key-pause'; readonly atMs: number; readonly startedAtMs: number }
   | { readonly type: 'tick'; readonly atMs: number }
   | { readonly type: 'clear' }
 
@@ -202,6 +210,26 @@ export function createDecoderReducer(
         }
       }
 
+      case 'key-pause': {
+        // A held symbol key is part of the element, not silence after it: move the
+        // start of the running gap to where the key actually came up.
+        if (state.phase !== 'waiting' || state.releasedAtMs === null) {
+          return state
+        }
+
+        const heldMs = Math.max(0, action.atMs - action.startedAtMs)
+
+        if (heldMs === 0) {
+          return state
+        }
+
+        return {
+          ...state,
+          releasedAtMs: state.releasedAtMs + heldMs,
+          liveElapsedMs: 0,
+        }
+      }
+
       case 'tick': {
         if (state.phase === 'holding') {
           if (state.pressStartedAtMs === null) {
@@ -220,12 +248,25 @@ export function createDecoderReducer(
         const gapMs = Math.max(0, action.atMs - state.releasedAtMs)
         const classification = classifyGap(gapMs, thresholds)
 
-        if (classification.verdict === 'word') {
+        if (classification.verdict === 'line') {
           // Freeze the metre at full scale and drop back to idle so the clock stops.
-          return { ...closeWord(state), liveElapsedMs: thresholds.gapMaxMs }
+          return {
+            ...appendSeparator(state, selection, '\n'),
+            liveElapsedMs: thresholds.lineGapMs,
+          }
         }
 
-        const committed = classification.verdict === 'letter' ? commitPendingLetter(state) : state
+        if (classification.verdict === 'word') {
+          // Stay in `waiting` on the same release: more silence can still arrive
+          // and escalate this same pause into a line break.
+          return {
+            ...appendSeparator(state, selection, ' '),
+            phase: 'waiting',
+            liveElapsedMs: gapMs,
+          }
+        }
+
+        const committed = classification.verdict === 'letter' ? commitPendingLetter(state, selection) : state
 
         return { ...committed, liveElapsedMs: gapMs }
       }

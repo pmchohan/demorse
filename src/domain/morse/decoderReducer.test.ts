@@ -13,16 +13,23 @@ const thresholds: MorseTimingThresholds = {
   tapMaxMs: 200,
   holdMinMs: 250,
   holdMaxMs: 700,
-  gapMinMs: 250,
-  gapMaxMs: 900,
+  letterGapMs: 250,
+  wordGapMs: 900,
+  lineGapMs: 1_800,
 }
 
 const reducer = createDecoderReducer(thresholds)
+const withExtras = createDecoderReducer(thresholds, { digits: true, specials: true })
 
-function pressAt(state: DecoderState, atMs: number, durationMs: number): DecoderState {
-  const holding = reducer(state, { type: 'press-start', atMs })
+function pressAt(
+  state: DecoderState,
+  atMs: number,
+  durationMs: number,
+  key = reducer,
+): DecoderState {
+  const holding = key(state, { type: 'press-start', atMs })
 
-  return reducer(holding, { type: 'press-end', atMs: atMs + durationMs })
+  return key(holding, { type: 'press-end', atMs: atMs + durationMs })
 }
 
 function tickAt(state: DecoderState, atMs: number): DecoderState {
@@ -60,7 +67,7 @@ describe('decoderReducer', () => {
     expect(state.text).toBe('S')
   })
 
-  it('adds a word space once the silence passes the gap maximum, and only once', () => {
+  it('adds a word space once the silence passes the word threshold', () => {
     let state = pressAt(createInitialDecoderState(), 1_000, 100)
     state = tickAt(state, 1_400)
 
@@ -69,11 +76,26 @@ describe('decoderReducer', () => {
     state = tickAt(state, 2_200)
 
     expect(state.text).toBe('E ')
-    expect(state.phase).toBe('idle')
+    // The clock keeps running: more silence can still escalate this same pause.
+    expect(state.phase).toBe('waiting')
+  })
 
-    state = tickAt(state, 3_000)
+  it('escalates the same long silence into a new line', () => {
+    let state = pressAt(createInitialDecoderState(), 1_000, 100)
+    state = tickAt(state, 1_400)
+    state = tickAt(state, 2_200)
 
     expect(state.text).toBe('E ')
+
+    state = tickAt(state, 3_100)
+
+    // The trailing space becomes a line break rather than stacking whitespace.
+    expect(state.text).toBe('E\n')
+    expect(state.phase).toBe('idle')
+
+    state = tickAt(state, 5_000)
+
+    expect(state.text).toBe('E\n')
   })
 
   it('ignores key bounce without losing the character in progress', () => {
@@ -109,6 +131,41 @@ describe('decoderReducer', () => {
     expect(state.notice?.kind).toBe('unresolved-sequence')
     expect(state.notice?.message).toMatch(/\.\.--/)
     expect(state.commitCount).toBe(1)
+  })
+
+  it('reads a digit once digits are switched on, and reports it as unresolved without them', () => {
+    const fiveDots = (key: typeof reducer): DecoderState => {
+      let state = createInitialDecoderState()
+
+      for (let index = 0; index < 5; index += 1) {
+        state = pressAt(state, 1_000 + index * 200, 80, key)
+      }
+
+      return key(state, { type: 'tick', atMs: 2_400 })
+    }
+
+    const lettersOnly = fiveDots(reducer)
+
+    expect(lettersOnly.text).toBe('')
+    expect(lettersOnly.notice?.kind).toBe('unresolved-sequence')
+
+    expect(fiveDots(withExtras).text).toBe('5')
+  })
+
+  it('does not let a held two-key dash count as silence', () => {
+    let state = reducer(createInitialDecoderState(), { type: 'symbol', symbol: '.', atMs: 1_000 })
+
+    state = reducer(state, { type: 'symbol', symbol: '-', atMs: 1_200 })
+    // The dash key stayed down for 700ms: the gap only starts when it came up.
+    state = reducer(state, { type: 'key-pause', atMs: 1_900, startedAtMs: 1_200 })
+    state = tickAt(state, 2_000)
+
+    expect(state.text).toBe('')
+    expect(state.symbols).toEqual(['.', '-'])
+
+    state = tickAt(state, 2_300)
+
+    expect(state.text).toBe('A')
   })
 
   it('keeps the dwell timer running across auto-repeat presses', () => {

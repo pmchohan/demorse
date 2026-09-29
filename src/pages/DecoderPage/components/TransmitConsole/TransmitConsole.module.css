@@ -1,0 +1,244 @@
+/* The console is the one place with a raised surface: it is the instrument you
+   touch. Everything else on the page stays flat and ruled. */
+.console {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: hsl(var(--color-bg-raised));
+  box-shadow: inset 0 0 0 1px hsl(var(--color-line) / 0.28);
+}
+
+.consoleHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* Segmented control: a hairline box with one lit cell. */
+.segmented {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid hsl(var(--color-line));
+  border-radius: var(--radius-md);
+  background: hsl(var(--color-bg-app));
+}
+
+.segment,
+.segmentOn {
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.02em;
+  color: hsl(var(--color-fg-muted));
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out-expo),
+    color var(--duration-fast) var(--ease-out-expo);
+}
+
+.segmentOn {
+  background: hsl(var(--color-brand-500));
+  color: hsl(var(--color-fg-on-brand));
+  font-weight: 600;
+}
+
+.segment:hover:not(.segmentOn) {
+  color: hsl(var(--color-fg-default));
+}
+
+.status {
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: hsl(var(--color-fg-subtle));
+}
+
+.status[data-live='yes'] {
+  color: hsl(var(--color-brand-400));
+}
+
+/* Element chain + candidate character. */
+.signal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 4.5rem;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: hsl(var(--color-bg-app));
+  box-shadow: inset 0 0 0 1px hsl(var(--color-line-hairline));
+}
+
+.elements {
+  flex: 1;
+  min-width: 0;
+}
+
+.candidate {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: var(--radius-md);
+  border: 2px solid hsl(var(--color-line));
+  font-family: var(--font-mono);
+  font-size: 2.5rem;
+  line-height: 1;
+  color: hsl(var(--color-fg-subtle));
+}
+
+.candidate[data-state='partial'] {
+  color: hsl(var(--color-fg-muted));
+  border-color: hsl(var(--color-line));
+}
+
+.candidate[data-state='resolved'] {
+  background: hsl(var(--color-brand-500));
+  border-color: hsl(var(--color-brand-500));
+  color: hsl(var(--color-fg-on-brand));
+}
+
+.candidate[data-state='dead'] {
+  border-color: hsl(var(--color-danger-500));
+  color: hsl(var(--color-danger-500));
+}
+
+/* Key pads. Pressed state drops the pad by the thickness of its base, never scales. */
+.pads {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+}
+
+.padBox {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+}
+
+.pad {
+  display: grid;
+  gap: var(--space-1);
+  place-items: center;
+  width: 100%;
+  min-height: 6rem;
+  padding: var(--space-4);
+  border: 1px solid hsl(var(--color-brand-500));
+  border-radius: var(--radius-md);
+  background: hsl(var(--color-brand-500) / 0.16);
+  color: hsl(var(--color-fg-default));
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  box-shadow: 0 4px 0 hsl(var(--color-brand-500) / 0.4);
+  transition:
+    transform var(--duration-instant) var(--ease-out-expo),
+    box-shadow var(--duration-instant) var(--ease-out-expo),
+    background var(--duration-fast) var(--ease-out-expo);
+}
+
+.pad:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 hsl(var(--color-brand-500) / 0.4);
+}
+
+/* The dah pad takes the dash hue so the two keys are tellable by colour alone. */
+.padDah {
+  border-color: hsl(var(--color-dash-500));
+  background: hsl(var(--color-dash-500) / 0.16);
+  box-shadow: 0 4px 0 hsl(var(--color-dash-500) / 0.4);
+}
+
+.padDah:active {
+  box-shadow: 0 0 0 hsl(var(--color-dash-500) / 0.4);
+}
+
+.padTitle {
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  letter-spacing: 0.01em;
+}
+
+.padSub {
+  font-size: var(--font-size-xs);
+  color: hsl(var(--color-fg-muted));
+}
+
+.padMark {
+  font-size: 1.5rem;
+  line-height: 0.6;
+  color: hsl(var(--color-brand-400));
+}
+
+.padDah .padMark {
+  color: hsl(var(--color-dash-500));
+}
+
+.kbd {
+  padding: 1px var(--space-2);
+  border: 1px solid hsl(var(--color-line));
+  border-radius: var(--radius-sm);
+  background: hsl(var(--color-bg-app));
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: hsl(var(--color-fg-default));
+}
+
+.padNote {
+  font-size: var(--font-size-xs);
+  color: hsl(var(--color-fg-subtle));
+}
+
+.padValue {
+  color: hsl(var(--color-brand-400));
+}
+
+.mini,
+.miniOn {
+  padding: 2px var(--space-3);
+  border: 1px solid hsl(var(--color-line));
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: var(--font-size-xs);
+  color: hsl(var(--color-fg-muted));
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out-expo),
+    color var(--duration-fast) var(--ease-out-expo);
+}
+
+.mini:hover {
+  border-color: hsl(var(--color-brand-500));
+  color: hsl(var(--color-fg-default));
+}
+
+/* Waiting for a new key: the label breathes so the capture is unmistakable. */
+.miniOn {
+  border-color: hsl(var(--color-brand-400));
+  color: hsl(var(--color-brand-400));
+  animation: breathe var(--duration-slow) var(--ease-out-expo) infinite alternate;
+}
+
+.hint {
+  font-size: var(--font-size-sm);
+  line-height: 1.7;
+  color: hsl(var(--color-fg-muted));
+}
+
+@keyframes breathe {
+  from {
+    opacity: 0.55;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

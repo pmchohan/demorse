@@ -1,0 +1,129 @@
+.root {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* The overline: the section label used everywhere on the page. */
+.overline {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-label);
+  letter-spacing: var(--letter-spacing-overline);
+  text-transform: uppercase;
+  color: hsl(var(--color-fg-subtle));
+}
+
+.readout {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--color-fg-subtle));
+}
+
+.readout[data-measuring='true'] {
+  color: hsl(var(--color-brand-400));
+}
+
+.trackWrap {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* The bar runs to the line-break threshold; the ticks mark what the pause does on
+   the way there, so the empty distance left is time still being waited out. */
+.track {
+  position: relative;
+  height: 0.625rem;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: hsl(var(--color-bg-app));
+  box-shadow: inset 0 0 0 1px hsl(var(--color-line-hairline));
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  border-radius: inherit;
+  background: hsl(var(--color-line));
+}
+
+.fill[data-tier='letter'] {
+  background: hsl(var(--color-brand-500));
+}
+
+.fill[data-tier='word'] {
+  background: hsl(var(--color-dash-500));
+}
+
+.fill[data-tier='line'] {
+  background: hsl(var(--color-danger-500));
+}
+
+.tick {
+  position: absolute;
+  inset-block: 0;
+  width: 2px;
+  background: hsl(var(--color-bg-app));
+}
+
+.tick[data-passed='true'] {
+  background: hsl(var(--color-bg-app) / 0.6);
+}
+
+.labels {
+  position: relative;
+  height: 2rem;
+}
+
+.tickLabel {
+  position: absolute;
+  top: 0;
+  display: grid;
+  gap: 1px;
+  transform: translateX(-50%);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: hsl(var(--color-fg-subtle));
+  transition: color var(--duration-fast) var(--ease-out-expo);
+}
+
+.tickLabel[data-passed='true'] {
+  color: hsl(var(--color-brand-400));
+}
+
+.tickMs {
+  justify-self: center;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  color: hsl(var(--color-fg-muted));
+}
+
+/* Element chain inside the console. */
+.element {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.elementEmpty {
+  font-size: var(--font-size-sm);
+  color: hsl(var(--color-fg-subtle));
+}

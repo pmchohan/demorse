@@ -11,8 +11,9 @@ const thresholds: MorseTimingThresholds = {
   tapMaxMs: 200,
   holdMinMs: 250,
   holdMaxMs: 700,
-  gapMinMs: 250,
-  gapMaxMs: 900,
+  letterGapMs: 250,
+  wordGapMs: 900,
+  lineGapMs: 1800,
 }
 
 describe('classifyPress', () => {
@@ -45,11 +46,17 @@ describe('classifyPress', () => {
 })
 
 describe('classifyGap', () => {
-  it('separates same-character, letter and word windows', () => {
+  it('separates the three tiers of silence', () => {
     expect(classifyGap(120, thresholds).verdict).toBe('intra')
     expect(classifyGap(250, thresholds).verdict).toBe('letter')
-    expect(classifyGap(900, thresholds).verdict).toBe('letter')
-    expect(classifyGap(901, thresholds)).toMatchObject({ verdict: 'word', confidence: 'over-max' })
+    expect(classifyGap(899, thresholds).verdict).toBe('letter')
+    expect(classifyGap(900, thresholds).verdict).toBe('word')
+    expect(classifyGap(1799, thresholds).verdict).toBe('word')
+    expect(classifyGap(1800, thresholds).verdict).toBe('line')
+  })
+
+  it('never treats a long pause as uncertain — silence has no upper bound', () => {
+    expect(classifyGap(60_000, thresholds)).toMatchObject({ verdict: 'line', confidence: 'exact' })
   })
 })
 
@@ -63,5 +70,14 @@ describe('findThresholdConflicts', () => {
 
     expect(conflicts).toHaveLength(1)
     expect(conflicts[0]).toMatch(/overlaps the hold window/)
+  })
+
+  it('reports gaps that can never be reached', () => {
+    expect(findThresholdConflicts({ ...thresholds, wordGapMs: 250 })).toEqual([
+      expect.stringMatching(/word spaces can never be reached/),
+    ])
+    expect(findThresholdConflicts({ ...thresholds, lineGapMs: 900 })).toEqual([
+      expect.stringMatching(/line breaks can never be reached/),
+    ])
   })
 })

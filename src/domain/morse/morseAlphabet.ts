@@ -72,7 +72,7 @@ export const SPECIAL_CODE_BY_CHARACTER: Readonly<Record<string, string>> = {
   '&': '.-...',
   '=': '-...-',
   '+': '.-.-.',
-  _': '..--.-',
+  '_': '..--.-',
   '"': '.-..-.',
   $: '...-..-',
   '@': '.--.-.',
@@ -156,18 +156,13 @@ export function codeForCharacter(
   return undefined
 }
 
-/** True when `code` is a prefix of — or itself — a character the selection can resolve. */
+/** True when `code` is a prefix of — or itself — a character the selection can resolve.
+ *
+ * Morse codes are deliberately not prefix-free — `.` is E while `...` is S — so this is
+ * what tells the decoder to keep waiting for more symbols rather than guessing.
+ */
 export function isResolvablePrefix(code: string, selection: AlphabetSelection = LETTERS_ONLY): boolean {
   return enabledCodes(selection).some((enabled) => enabled.startsWith(code))
-}
-
-/** True when every sequence in the selection is reachable, i.e. none is a prefix of another. */
-export function isPrefixFree(selection: AlphabetSelection = LETTERS_ONLY): boolean {
-  const codes = enabledCodes(selection)
-
-  return codes.every(
-    (code) => codes.every((other) => other === code || !other.startsWith(code)),
-  )
 }
 
 export function symbolsToMorse(symbols: readonly MorseSymbol[]): string {
