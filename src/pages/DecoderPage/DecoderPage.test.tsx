@@ -137,6 +137,47 @@ describe('DecoderPage', () => {
     expect(container.querySelector('[data-part="edge"][data-state="committed"]')).toBeNull()
   })
 
+  it('grows the digit chart and starts resolving numbers when switched on', () => {
+    const clock = startClock(50_000)
+    const { container } = render(<DecoderPage />)
+
+    // Two-key mode names the symbol on keydown, so the test needs no dwell frames.
+    fireEvent.click(screen.getByRole('tab', { name: 'Two keys' }))
+
+    const keyFiveDashes = () => {
+      for (let index = 0; index < 5; index += 1) {
+        fireEvent.keyDown(window, { code: 'KeyJ' })
+        fireEvent.keyUp(window, { code: 'KeyJ' })
+        clock.advance(20)
+      }
+
+      // Past the character gap, the sequence must resolve or be reported.
+      clock.advance(320)
+    }
+
+    // Letters only: the all-dash path walks past O and off the chart.
+    keyFiveDashes()
+
+    expect(transcript()?.textContent).toContain('Waiting for the first tap')
+    expect(
+      screen.getByText(/is not a character the chart can resolve — nothing was appended/),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /numbers chart/i })).toBeNull()
+
+    // Numbers switched on: the digit chart appears underneath the letter chart.
+    fireEvent.click(screen.getByRole('checkbox', { name: /numbers 0–9/i }))
+
+    expect(screen.getByRole('img', { name: /numbers chart/i })).toBeInTheDocument()
+    expect(container.querySelectorAll('svg')).toHaveLength(2)
+
+    // ...and the same five dashes now print 0.
+    keyFiveDashes()
+
+    expect(transcript()?.textContent).toBe('0')
+    expect(screen.getByText('1 letter committed')).toBeInTheDocument()
+    expect(window.localStorage.getItem('demorse.settings.v1')).toContain('"digits":true')
+  })
+
   it('switches the colour theme from the header', () => {
     render(<DecoderPage />)
 

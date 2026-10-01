@@ -64,6 +64,9 @@
   --font-size-xl: 1.5rem;
   --font-size-2xl: clamp(1.5rem, 3vw, 2rem);
   --font-size-3xl: clamp(2.25rem, 5vw, 3.25rem);
+  /* The decoded tape is ruled paper: one hairline under every line of text, and
+     the pitch doubles as the tape text's line height so each line sits on a rule. */
+  --tape-line-pitch: 2rem;
   --letter-spacing-tight: -0.01em;
   --letter-spacing-wide: 0.16em;
   /* The overline: small caps set very wide, used as the section label everywhere. */
